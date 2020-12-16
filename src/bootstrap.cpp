@@ -14,10 +14,7 @@ struct ServConf servConf = {
         .mode = ServMode::FOREGROUND
 };
 
-#include <unistd.h>
-
 int main(int argc, char **argv) {
-
 
     //1：参数解析
     CmdParser::parse(argc, argv);
@@ -28,17 +25,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     //开始写日志
-    log(Log::TRACE, "log trace, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.addr,
-        servConf.mode);
-    log(Log::INFO, "log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port + 1, servConf.addr,
-        servConf.mode + 1);
-    log(Log::WARN, "log warn, server config [port:%d],[addr:%s],[mode:%d]", servConf.port + 2, servConf.addr,
-        servConf.mode + 2);
-    log(Log::ERROR, "log error, server config [port:%d],[addr:%s],[mode:%d]", servConf.port + 3, servConf.addr,
-        servConf.mode + 3);
-    log(Log::FATAL, "log fatal, server config [port:%d],[addr:%s],[mode:%d]", servConf.port + 4, servConf.addr,
-        servConf.mode + 4);
-
+    info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.addr, servConf.mode);
 
     while (1);
 
