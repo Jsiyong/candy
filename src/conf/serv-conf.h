@@ -22,7 +22,7 @@ enum ServMode {
 struct ServConf {
 
     int port; //服务器端口
-    char *addr;//服务器的监听地址
+    char *host;//服务器的监听地址
     short mode;//启动模式
 };
 

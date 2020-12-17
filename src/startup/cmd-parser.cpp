@@ -29,7 +29,7 @@ void CmdParser::parse(int argc, char **argv) {
     while ((c = getopt_long(argc, argv, "a:dfhp:", options, NULL)) != -1) {
         switch (c) {
             case 'a':
-                servConf.addr = optarg;
+                servConf.host = optarg;
                 break;
             case 'd':
                 servConf.mode = ServMode::DAEMON;

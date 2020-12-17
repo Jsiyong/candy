@@ -10,7 +10,7 @@
 //全局变量服务器配置
 struct ServConf servConf = {
         .port = DEFAULT_SERV_PORT,
-        .addr = (char *) DEFAULT_SERV_ADDR,
+        .host = (char *) DEFAULT_SERV_ADDR,
         .mode = ServMode::FOREGROUND
 };
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     //开始写日志
-    info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.addr, servConf.mode);
+    info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.host, servConf.mode);
 
     while (1);
 
