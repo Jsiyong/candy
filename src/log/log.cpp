@@ -48,6 +48,7 @@ void Log::readLogAndPrint() {
             exit(1);
         }
         printf("%s", buff);
+        memset(buff, 0, len);
     }
 }
 

@@ -6,6 +6,7 @@
 #include "conf/serv-conf.h"
 #include "startup/cmd-parser.h"
 #include "log/log.h"
+#include "core/serv-base.h"
 
 //全局变量服务器配置
 struct ServConf servConf = {
@@ -27,11 +28,11 @@ int main(int argc, char **argv) {
     //开始写日志
     info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.host, servConf.mode);
 
-    while (1);
-
-
 
     //3:启动服务器
+    ServBase servBase;
+    servBase.start(servConf.host, servConf.port);
+    servBase.run();
 
     exit(EXIT_SUCCESS);
 }
