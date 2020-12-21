@@ -29,10 +29,12 @@ int Log::init() {
         //子进程[读]，关闭写端
         close(pfd[1]);
         readLogAndPrint();
-
+        //正常退出
+        exit(0);
     } else {
         //父进程[写]，关闭读端
         close(pfd[0]);
+        //等待给子进程收拾
     }
 
     return 0;
@@ -40,15 +42,21 @@ int Log::init() {
 
 void Log::readLogAndPrint() {
     char buff[MAX_LOG_BUFF_SIZE] = {0};
-    while (1) {
+    while (true) {
         //读管道的数据
         int len = ::read(pfd[0], buff, MAX_LOG_BUFF_SIZE);
+
         if (len < 0) {
             perror("read error");
-            exit(1);
+            break;
+        } else if (len == 0) {
+            //读到了0，可能父进程的文件描述符已经关闭了，就会一直返回0
+            printf("write pipe close\n");
+            break;
+        } else {
+            printf("%s", buff);
+            memset(buff, 0, len);
         }
-        printf("%s", buff);
-        memset(buff, 0, len);
     }
 }
 
