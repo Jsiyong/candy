@@ -32,15 +32,25 @@ struct Channel {
 
     void doRead();
 
+    void doWrite();
+
     int fd() const;
 
     short getType() const;
 
     short getState() const;
 
+    char *getHost() const;
+
+    int getPort() const;
+
 private:
 
     int _fd;//对应的文件描述符
+
+    int _port;//端口
+    char *_host;//ip地址
+
     short _type;//文件描述符类型
 
     short _state;//通道的状态

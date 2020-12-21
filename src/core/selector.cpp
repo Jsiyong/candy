@@ -11,8 +11,10 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define MAX_EVENT 2000
+#define IP_SIZE 20
 
 Selector::Selector() {
     //初始化环境
@@ -64,6 +66,13 @@ void Selector::select() {
                 //客户端的读事件产生
                 channel->doRead();
                 if (channel->getState() == Channel::CLOSE) {
+
+                    this->removeChannelInternal(pos);
+                } else {
+
+                    channel->doWrite();
+                    int clifd = _channels[pos]->fd();
+                    close(clifd);
                     this->removeChannelInternal(pos);
                 }
             }
@@ -80,6 +89,9 @@ void Selector::doAccept(int servfd) {
 
     int clientfd = ::accept(servfd, (struct sockaddr *) &clientaddr, &socklen);
     exit_if(clientfd < 0, "accept error:%s", strerror(errno));
+    char ip[IP_SIZE] = {0};
+    inet_ntop(AF_INET, &clientaddr.sin_addr, ip, socklen);
+    trace("[new conn]client host:%s, port:%d", ip, ntohs(clientaddr.sin_port));
 
     //设置他exec退出，同时设置为非阻塞
     int ret = FileUtil::addFlag2Fd(clientfd, FD_CLOEXEC | O_NONBLOCK);
@@ -115,6 +127,7 @@ void Selector::removeChannelInternal(int pos) {
     int clifd = _channels[pos]->fd();
     epoll_ctl(_epfd, EPOLL_CTL_DEL, clifd, NULL);
     info("epoll ctl delete");
+    trace("client disconnected.ip:%s, port:%d", _channels[pos]->getHost(), _channels[pos]->getPort());
 
     //删除节点的内存
     delete _channels[pos];
