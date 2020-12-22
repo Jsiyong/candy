@@ -10,10 +10,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
-#define MAX_EVENT 2000
+#define MAX_EVENT 1024
 #define IP_SIZE 20
 
 Selector::Selector() {
@@ -45,7 +44,7 @@ void Selector::addChannel(int fd, short fdtype, unsigned int events) {
     }
 }
 
-void Selector::select() {
+void Selector::doSelect() {
 
     struct epoll_event events[MAX_EVENT];
 
@@ -68,12 +67,9 @@ void Selector::select() {
                 if (channel->getState() == Channel::CLOSE) {
 
                     this->removeChannelInternal(pos);
-                } else {
 
+                } else {
                     channel->doWrite();
-                    int clifd = _channels[pos]->fd();
-                    close(clifd);
-                    this->removeChannelInternal(pos);
                 }
             }
         }

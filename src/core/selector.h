@@ -31,7 +31,7 @@ struct Selector {
     /**
      * 开始执行选择
      */
-    void select();
+    void doSelect();
 
 private:
 

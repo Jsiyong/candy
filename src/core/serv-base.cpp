@@ -60,6 +60,6 @@ ServBase::~ServBase() {
 void ServBase::run() {
     //选择器开始选择
     while (1) {
-        _selector->select();
+        _selector->doSelect();
     }
 }

@@ -9,8 +9,6 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
-#include <string.h>
 #include <stdio.h>
 #include "../log/log.h"
 
@@ -105,7 +103,12 @@ void Channel::doWrite() {
     char resp[MAX_BUFF_SIZE] = {0};
     char *p = resp;
     const char *header = "HTTP/1.1 200 OK\r\n";
-    const char *line = "Content-Type:application/json; charset=UTF-8\r\n";
+    const char *linefmt = "Content-Type:%s\r\nContent-Length:%d\r\n";
+    //body
+    const char *body = "{\"title\":\"hello\",\"body\":\"world\"}";
+    char line[MAX_BUFF_SIZE] = {0};
+    sprintf(line, linefmt, "application/json; charset=UTF-8", strlen(body));
+
     //头部
     strcat(p, header);
     p += strlen(header);
@@ -118,11 +121,9 @@ void Channel::doWrite() {
     strcat(p, "\r\n");
     p += strlen("\r\n");
 
-    //body
-    const char *body = "{\"title\":\"hello\",\"body\":\"world\"}";
+
     strcat(p, body);
-
-
+    trace("response data:%s", resp);
     write(_fd, resp, strlen(resp));
 
 }
