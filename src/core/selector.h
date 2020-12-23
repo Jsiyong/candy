@@ -5,6 +5,7 @@
 #ifndef CANDY_SELECTOR_H
 #define CANDY_SELECTOR_H
 
+#include <list>
 #include "channel.h"
 
 /**
@@ -35,13 +36,9 @@ struct Selector {
 
 private:
 
-    void removeChannelInternal(int pos);
+    void removeChannelInternal(Channel *channel);
 
-    void initInternal();
-
-    int getFreePos();
-
-    Channel **_channels;
+    std::list<Channel *> _channels;
 };
 
 #endif //CANDY_SELECTOR_H

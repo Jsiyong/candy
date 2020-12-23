@@ -9,6 +9,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define MAX_LOG_FMT_SIZE 512
+#define MAX_LOG_BUFF_SIZE 4096
+
 //管道的两端
 static int pfd[2];
 
@@ -62,7 +65,7 @@ void Log::readLogAndPrint() {
 
 void Log::writeLog(Level level, const char *format, ...) {
 
-    char fmtBuf[MAX_LOG_BUFF_SIZE] = {0};
+    char fmtBuf[MAX_LOG_FMT_SIZE] = {0};
     char *p = fmtBuf;
     switch (level) {
         case TRACE:

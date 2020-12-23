@@ -14,6 +14,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define MAX_CLIENT_QUEUE 50
+
 void ServBase::start(const char *host, unsigned short port) {
     //服务端监听套接字
     _servfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -38,7 +40,7 @@ void ServBase::start(const char *host, unsigned short port) {
     exit_if(ret < 0, "bind error:%s", strerror(errno));
 
     //监听
-    ret = ::listen(_servfd, 20);
+    ret = ::listen(_servfd, MAX_CLIENT_QUEUE);
     exit_if(ret < 0, "listen error:%s", strerror(errno));
     info("listen success: ip is %s, port is %d", host, port);
 

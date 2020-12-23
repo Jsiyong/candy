@@ -12,8 +12,9 @@
 #include <stdio.h>
 #include "../log/log.h"
 
-#define MAX_BUFF_SIZE 1024
 #define IP_SIZE 20
+
+#define MAX_BUFF_SIZE 1024
 
 int Channel::fd() const {
     return _fd;
@@ -21,21 +22,21 @@ int Channel::fd() const {
 
 Channel::Channel(int fd, short type)
         : _fd(fd), _type(type), _state(State::ACTIVE) {
-    //创建读写缓冲区
-    _readBuff = (char *) malloc(MAX_BUFF_SIZE);
-    memset(_readBuff, 0, MAX_BUFF_SIZE);
-    _readPos = 0;
 
     //ip地址
-    _host = (char *) malloc(IP_SIZE);
-    memset(_host, 0, IP_SIZE);
+    //请求和响应
+    _httpRequest = new HttpRequest();
+    _httpResponse = new HttpResponse();
 
     //设置ip地址和端口
     struct sockaddr_in raddr;
     socklen_t socklen = sizeof(raddr);
     memset(&raddr, 0, socklen);
     getpeername(_fd, (struct sockaddr *) &raddr, &socklen);
-    inet_ntop(AF_INET, &raddr.sin_addr, _host, socklen);
+    char iptmp[IP_SIZE];
+    inet_ntop(AF_INET, &raddr.sin_addr, iptmp, socklen);
+    _host = iptmp;
+
     _port = ntohs(raddr.sin_port);
 
 }
@@ -46,8 +47,11 @@ short Channel::getType() const {
 
 Channel::~Channel() {
     //释放读写缓冲区
-    free(_readBuff);
-    free(_host);
+
+    //释放请求和响应
+    delete _httpRequest;
+    delete _httpResponse;
+
     close(_fd);
 }
 
@@ -55,14 +59,12 @@ void Channel::doRead() {
 
     while (true) {
 
-        int size = ::read(_fd, _readBuff + _readPos, MAX_BUFF_SIZE);
+        char buf[MAX_BUFF_SIZE] = {0};
+
+        int size = ::read(_fd, buf, MAX_BUFF_SIZE);
         if (0 > size) {
             //假错
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                info("recv all data:%s", _readBuff);
-                //读完了，重新设置缓冲区数据
-                memset(_readBuff, 0, _readPos);
-                _readPos = 0;
                 break;
             }
 
@@ -73,6 +75,7 @@ void Channel::doRead() {
 
         } else if (0 == size) {
             info("client disconnect.");
+            info("recv all data:%s", _readBuff.data());
 
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
             close(_fd);
@@ -81,8 +84,9 @@ void Channel::doRead() {
 
             break;
         } else {
-            _readPos += size;
+            _readBuff.append(buf, size);
         }
+
     }
 }
 
@@ -90,7 +94,7 @@ short Channel::getState() const {
     return _state;
 }
 
-char *Channel::getHost() const {
+std::string Channel::getHost() const {
     return _host;
 }
 
