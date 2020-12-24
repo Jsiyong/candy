@@ -5,6 +5,8 @@
 #ifndef CANDY_HTTP_H
 #define CANDY_HTTP_H
 
+#include <map>
+#include <string>
 
 /**
  * Http解析结果
@@ -32,9 +34,18 @@ struct HttpRequest : public HttpBase {
      * @param buf
      * @return
      */
-    HttpResult tryDecode(const char *buf);
+    HttpResult tryDecode(const std::string &buf);
 
 private:
+
+    void parseInternal(const char *buf, int size);
+
+private:
+
+    std::map<std::string, std::string> _headers;//所有的请求头
+
+
+    int _scannedIndex;//已经浏览过的索引
 
 };
 
