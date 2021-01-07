@@ -26,11 +26,13 @@ struct StringBuffer {
 /**
  * Http请求行的状态
  */
-enum HttpRequestLineState {
+enum class HttpRequestDecodeState {
     INVALID,//无效
     INVALID_METHOD,//无效请求方法
     INVALID_URI,//无效的请求路径
     INVALID_VERSION,//无效的协议版本号
+    INVALID_HEADER,//无效请求头
+
 
     START,//请求行开始
     METHOD,//请求方法
@@ -49,8 +51,22 @@ enum HttpRequestLineState {
     VERSION_SPLIT,//版本分隔符 '.'
     VERSION,//版本
 
-    BEFORE_COMPLETE,//请求完成请 \r
-    COMPLETE//结束
+    HEADER_KEY,
+
+    HEADER_BEFORE_COLON,//冒号之前
+    HEADER_AFTER_COLON,//冒号
+    HEADER_VALUE,//值
+
+    WHEN_CR,//遇到一个回车之后
+
+    CR_LF,//回车换行
+
+    CR_LF_CR,//回车换行之后的状态
+
+
+    BODY,//请求体
+
+    COMPLETE,//完成
 };
 
 /**
@@ -82,10 +98,21 @@ struct HttpRequest : public HttpBase {
      */
     void tryDecode(const std::string &buf);
 
+    const std::string &getMethod() const;
+
+    const std::string &getUrl() const;
+
+    const std::map<std::string, std::string> &getRequestParams() const;
+
+    const std::string &getProtocol() const;
+
+    const std::string &getVersion() const;
+
+    const std::map<std::string, std::string> &getHeaders() const;
+
+    const std::string &getBody() const;
+
 private:
-
-
-    int parseRequestLine(const char *buf, int size);
 
     void parseInternal(const char *buf, int size);
 
@@ -102,7 +129,11 @@ private:
 
     std::map<std::string, std::string> _headers;//所有的请求头
 
-    int _scannedPos = 0;//当前已经浏览到的位置
+    std::string _body;//请求体
+
+    int _nextPos = 0;//下一个位置的
+
+    HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
 };
 
 /**
