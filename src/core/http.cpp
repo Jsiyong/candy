@@ -135,14 +135,14 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                 } else if (isblank(ch)) {//遇到空格，请求路径解析完成，开始解析协议
                     url.end = p;
                     _url = url;
-                    _decodeState = HttpRequestDecodeState::PROTOCOL;
+                    _decodeState = HttpRequestDecodeState::BEFORE_PROTOCOL;
                 } else {
                     //do nothing
                 }
                 break;
             }
             case HttpRequestDecodeState::BEFORE_URI_PARAM_KEY: {
-                if (isblank(ch)) {
+                if (isblank(ch) || ch == LF || ch == CR) {
                     _decodeState = HttpRequestDecodeState::INVALID_URI;
                 } else {
                     requestParamKey.begin = p;
@@ -162,7 +162,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                 break;
             }
             case HttpRequestDecodeState::BEFORE_URI_PARAM_VALUE: {
-                if (isblank(ch)) {
+                if (isblank(ch) || ch == LF || ch == CR) {
                     _decodeState = HttpRequestDecodeState::INVALID_URI;
                 } else {
                     requestParamValue.begin = p;
