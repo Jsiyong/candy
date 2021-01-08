@@ -57,14 +57,34 @@ void Selector::doSelect() {
                 //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
                 //客户端的读事件产生
                 channel->doRead();
+                HttpRequest *pRequest = channel->getHttpRequest();
+                pRequest->tryDecode();
+
+                info("[method]%s", pRequest->getMethod().c_str());
+                info("[url]%s", pRequest->getUrl().c_str());
+                info("[request params]");
+                for (auto &p : pRequest->getRequestParams()) {
+                    trace("++ key: %s", p.first.c_str());
+                    trace("-- value: %s", p.second.c_str());
+                }
+
+                info("[protocol]%s", pRequest->getProtocol().c_str());
+                info("[version]%s", pRequest->getVersion().c_str());
+                info("[request headers]");
+                for (auto &h : pRequest->getHeaders()) {
+                    trace("++ key: %s", h.first.c_str());
+                    trace("-- value: %s", h.second.c_str());
+                }
+                info("[body]%s", pRequest->getBody().c_str());
+
                 if (channel->getState() == Channel::CLOSE) {
-
                     this->removeChannelInternal(channel);
-
-                } else {
-                    channel->doWrite();
                 }
             }
+        }
+        //如果是可写事件触发
+        if (events[i].events & EPOLLOUT) {
+            channel->doWrite();
         }
     }
 
@@ -90,8 +110,8 @@ void Selector::doAccept(int servfd) {
     int ret = FileUtil::addFlag2Fd(clientfd, FD_CLOEXEC | O_NONBLOCK);
     exit_if(ret < 0, "addFlag2Fd FD_CLOEXEC error:%s", strerror(errno));
 
-    //将他添加进入select选择器中，采用边缘非阻塞形式触发
-    this->addChannel(clientfd, Channel::CONN, EPOLLIN | EPOLLET);
+    //将他添加进入select选择器中，采用边缘非阻塞形式触发，监听可读事件和可写事件
+    this->addChannel(clientfd, Channel::CONN, EPOLLIN | EPOLLOUT | EPOLLET);
 }
 
 Selector::~Selector() {

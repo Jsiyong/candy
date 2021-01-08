@@ -5,6 +5,7 @@
 #ifndef CANDY_SERV_BASE_H
 #define CANDY_SERV_BASE_H
 
+#include <atomic>
 #include "channel.h"
 #include "selector.h"
 
@@ -20,6 +21,8 @@ struct ServBase {
 
 
 private:
+    std::atomic<bool> _exit;
+
     int _servfd;
     Channel *_listenChannel;
     Selector *_selector;

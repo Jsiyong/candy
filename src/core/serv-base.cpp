@@ -44,15 +44,16 @@ void ServBase::start(const char *host, unsigned short port) {
     exit_if(ret < 0, "listen error:%s", strerror(errno));
     info("listen success: ip is %s, port is %d", host, port);
 
-
+    //设置非阻塞，防止在accept之前客户端发送RST然后出现卡在accept的情况
+    FileUtil::setNonBlock(_servfd);
     //添加进去选择器中
-    _selector->addChannel(_servfd, Channel::LISTEN, EPOLLIN);//监听她的读时间，采用水平触发，可以防止并发连接的时候丢失连接的情况[默认情况]
+    _selector->addChannel(_servfd, Channel::LISTEN, EPOLLIN);//监听她的读时间，采用水平触发，设置非阻塞，可以防止并发连接的时候丢失连接的情况[默认情况]
 
 }
 
 ServBase::ServBase() {
+    _exit = false;
     _selector = new Selector();
-
 }
 
 ServBase::~ServBase() {
@@ -61,7 +62,7 @@ ServBase::~ServBase() {
 
 void ServBase::run() {
     //选择器开始选择
-    while (1) {
+    while (!_exit) {
         _selector->doSelect();
     }
 }

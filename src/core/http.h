@@ -98,6 +98,8 @@ struct HttpRequest : public HttpBase {
      */
     void tryDecode(const std::string &buf);
 
+    void tryDecode();
+
     const std::string &getMethod() const;
 
     const std::string &getUrl() const;
@@ -111,6 +113,8 @@ struct HttpRequest : public HttpBase {
     const std::map<std::string, std::string> &getHeaders() const;
 
     const std::string &getBody() const;
+
+    void setData(const std::string *data);
 
 private:
 
@@ -132,6 +136,8 @@ private:
     std::string _body;//请求体
 
     int _nextPos = 0;//下一个位置的
+
+    const std::string *_data = NULL;//所解析的数据指针
 
     HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
 };

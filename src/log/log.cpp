@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <limits.h>
 
 #define MAX_LOG_FMT_SIZE 512
-#define MAX_LOG_BUFF_SIZE 4096
 
 //管道的两端
 static int pfd[2];
@@ -44,10 +44,10 @@ int Log::init() {
 }
 
 void Log::readLogAndPrint() {
-    char buff[MAX_LOG_BUFF_SIZE] = {0};
+    char buff[PIPE_BUF] = {0};
     while (true) {
         //读管道的数据
-        int len = ::read(pfd[0], buff, MAX_LOG_BUFF_SIZE);
+        int len = ::read(pfd[0], buff, PIPE_BUF);
 
         if (len < 0) {
             perror("read error");
@@ -100,7 +100,7 @@ void Log::writeLog(Level level, const char *format, ...) {
     strcat(p + 1, "\n");
 
     //构造
-    char buf[MAX_LOG_BUFF_SIZE] = {0};
+    char buf[PIPE_BUF] = {0};
 
     //可变参解析
     va_list args;

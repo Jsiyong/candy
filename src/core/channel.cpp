@@ -26,6 +26,7 @@ Channel::Channel(int fd, short type)
     //ip地址
     //请求和响应
     _httpRequest = new HttpRequest();
+
     _httpResponse = new HttpResponse();
 
     //设置ip地址和端口
@@ -38,7 +39,6 @@ Channel::Channel(int fd, short type)
     _host = iptmp;
 
     _port = ntohs(raddr.sin_port);
-
 }
 
 short Channel::getType() const {
@@ -68,6 +68,7 @@ void Channel::doRead() {
                 break;
             }
 
+            _httpRequest->setData(&_readBuff);
             close(_fd);
             //通道的状态变为关闭
             _state = State::CLOSE;
@@ -76,6 +77,8 @@ void Channel::doRead() {
         } else if (0 == size) {
             info("client disconnect.");
             info("recv all data:%s", _readBuff.data());
+
+            _httpRequest->setData(&_readBuff);
 
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
             close(_fd);
@@ -86,7 +89,6 @@ void Channel::doRead() {
         } else {
             _readBuff.append(buf, size);
         }
-
     }
 }
 
@@ -130,4 +132,8 @@ void Channel::doWrite() {
     trace("response data:%s", resp);
     write(_fd, resp, strlen(resp));
 
+}
+
+HttpRequest *Channel::getHttpRequest() const {
+    return _httpRequest;
 }

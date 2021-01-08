@@ -365,3 +365,13 @@ const std::map<std::string, std::string> &HttpRequest::getHeaders() const {
 const std::string &HttpRequest::getBody() const {
     return _body;
 }
+
+void HttpRequest::setData(const std::string *data) {
+    _data = data;
+}
+
+void HttpRequest::tryDecode() {
+    if (_data) {
+        this->tryDecode(*_data);
+    }
+}

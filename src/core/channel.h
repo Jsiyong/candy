@@ -47,6 +47,8 @@ struct Channel {
 
     int getPort() const;
 
+    HttpRequest *getHttpRequest() const;
+
 private:
 
     int _fd;//对应的文件描述符
