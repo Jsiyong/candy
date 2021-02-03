@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
-#include "../log/log.h"
+#include "../log/logger.h"
 
 #define IP_SIZE 20
 
