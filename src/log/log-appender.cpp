@@ -15,16 +15,16 @@ ConsoleLogAppender::ConsoleLogAppender() {
     _layout = new LogLayout();
 }
 
+ConsoleLogAppender::~ConsoleLogAppender() {
+    delete _layout;
+}
+
 void FileLogAppender::append(const LoggingEvent &event) {
 
 }
 
 void LogAppender::setLevel(LogLevel level) {
     _level = level;
-}
-
-LogAppender::~LogAppender() {
-
 }
 
 void LogAppender::doAppend(const LoggingEvent &event) {
@@ -36,4 +36,8 @@ void LogAppender::doAppend(const LoggingEvent &event) {
 
 void LogAppender::setLayout(LogLayout *layout) {
     _layout = layout;
+}
+
+LogAppender::~LogAppender() {
+
 }

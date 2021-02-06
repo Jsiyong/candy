@@ -8,27 +8,38 @@
 #include "log/logger.h"
 #include "core/serv-base.h"
 
+static Logger *pLogger = NULL;
+static LogAppender *pLogAppender = NULL;
+
+/**
+ * 主函数退出前需要做些清理工作
+ */
+static void beforeExit() {
+    delete pLogAppender;
+    delete pLogger;
+}
+
 int main(int argc, char **argv) {
     //1：参数解析
     CmdParser::parse(argc, argv);
 
-    Logger *log = new Logger();
-    LogManager::getInstance()->setLogger(log);
-    log->addAppender(new ConsoleLogAppender());
+    //日志模块初始化，采用异步日志的形式
+    pLogger = new Logger();
+    pLogAppender = new ConsoleLogAppender();
+    pLogger->addAppender(pLogAppender);
+    LogManager::getInstance()->setLogger(pLogger);
 
-//    //2：fork日志进程，日记进程单独处理
-//    if (Log::init() < 0) {
-//        //初始化失败
-//        exit(1);
-//    }
     //开始写日志
     info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.host, servConf.mode);
-
 
     //3:启动服务器
     ServBase servBase;
     servBase.start(servConf.host, servConf.port);
     servBase.run();
 
-    exit(EXIT_SUCCESS);
+    //挂上清理函数
+    atexit(beforeExit);
+
+    //退出主线程
+    return 0;
 }

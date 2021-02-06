@@ -8,9 +8,10 @@ static void *test_pid(void *) {
 }
 
 int main() {
-    Logger *log = new Logger();
+    Logger *log = new AsyncLogger();
+    LogAppender *logAppender = new ConsoleLogAppender();
     LogManager::getInstance()->setLogger(log);
-    log->addAppender(new ConsoleLogAppender());
+    log->addAppender(logAppender);
 
     trace("world is %s", "good");
     info("log info, server config [port:%d],[addr:%s],[mode:%d]", 10, "1.2.3", 1);

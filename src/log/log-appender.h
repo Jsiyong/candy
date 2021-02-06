@@ -14,7 +14,7 @@
  */
 struct LogAppender {
 
-    ~LogAppender();
+    virtual ~LogAppender();
 
     void setLevel(LogLevel level);
 
@@ -43,6 +43,8 @@ protected:
  */
 struct ConsoleLogAppender : public LogAppender {
     ConsoleLogAppender();
+
+    ~ConsoleLogAppender() override;
 
     void append(const LoggingEvent &event) override;
 };

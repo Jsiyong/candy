@@ -83,6 +83,12 @@ void AsyncLogger::write(const LoggingEvent &event) {
     pthread_mutex_unlock(&_mutex); //释放互斥锁
 }
 
+AsyncLogger::~AsyncLogger() {
+    //让线程正常退出，让主线程去收拾
+    _exit = true;
+    pthread_join(_threadId, NULL);
+}
+
 void LogManager::setLogger(Logger *logger) {
     _logger = logger;
 }

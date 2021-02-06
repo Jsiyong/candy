@@ -35,14 +35,6 @@
     } while (0)
 
 /**
- * 日志格式器，主要负责日志的格式，颜色等信息
- */
-struct LogFormatter {
-
-};
-
-
-/**
  * 同步日志管理器
  */
 struct Logger {
@@ -84,6 +76,8 @@ protected:
 struct AsyncLogger : public Logger {
 
     AsyncLogger();
+
+    ~AsyncLogger();
 
 private:
     virtual void write(const LoggingEvent &event);
