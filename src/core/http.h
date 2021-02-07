@@ -7,6 +7,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #define CR '\r'
 #define LF '\n'
@@ -96,7 +97,7 @@ struct HttpRequest : public HttpBase {
      * @param buf
      * @return
      */
-    void tryDecode(const std::string &buf);
+    void tryDecode(const std::vector<char> &buf);
 
     void tryDecode();
 
@@ -112,9 +113,9 @@ struct HttpRequest : public HttpBase {
 
     const std::map<std::string, std::string> &getHeaders() const;
 
-    const std::string &getBody() const;
+    const std::vector<char> &getBody() const;
 
-    void setData(const std::string *data);
+    void setData(const std::vector<char> *data);
 
 private:
 
@@ -133,11 +134,11 @@ private:
 
     std::map<std::string, std::string> _headers;//所有的请求头
 
-    std::string _body;//请求体
+    std::vector<char> _body;//请求体
 
     int _nextPos = 0;//下一个位置的
 
-    const std::string *_data = NULL;//所解析的数据指针
+    const std::vector<char> *_data = NULL;//所解析的数据指针
 
     HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
 };

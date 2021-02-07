@@ -40,3 +40,7 @@ const std::string &LoggingEvent::getLogName() const {
 const timeval &LoggingEvent::getTime() const {
     return _time;
 }
+
+const char *LoggingEvent::convert(const std::vector<char> &str) {
+    return str.data();
+}

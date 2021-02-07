@@ -53,8 +53,8 @@ response
 //首先解析请求行
 //接着解析请求头
 //最后解析请求体
-void HttpRequest::tryDecode(const std::string &buf) {
-    this->parseInternal(buf.c_str(), buf.size());
+void HttpRequest::tryDecode(const std::vector<char> &buf) {
+    this->parseInternal(buf.data(), buf.size());
 }
 
 //解析请求行
@@ -328,7 +328,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
             }
             case HttpRequestDecodeState::BODY: {
                 //解析请求体
-                _body.assign(p, bodyLength);
+                _body.assign(p, p + bodyLength);
                 _decodeState = HttpRequestDecodeState::COMPLETE;
                 break;
             }
@@ -362,11 +362,11 @@ const std::map<std::string, std::string> &HttpRequest::getHeaders() const {
     return _headers;
 }
 
-const std::string &HttpRequest::getBody() const {
+const std::vector<char> &HttpRequest::getBody() const {
     return _body;
 }
 
-void HttpRequest::setData(const std::string *data) {
+void HttpRequest::setData(const std::vector<char> *data) {
     _data = data;
 }
 

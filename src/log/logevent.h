@@ -75,6 +75,13 @@ private:
     static const char *convert(const std::string &str);
 
     /**
+     * 遇到std::vector<char>类型转换为str类型
+     * @param str
+     * @return
+     */
+    static const char *convert(const std::vector<char> &str);
+
+    /**
      * 获取需要记录的日志信息
      * @tparam Args
      * @param format

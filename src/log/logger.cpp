@@ -44,6 +44,8 @@ const std::string &Logger::getName() const {
 }
 
 AsyncLogger::AsyncLogger() {
+    //初始化互斥锁
+    pthread_mutex_init(&_mutex, NULL);
     pthread_create(&_threadId, NULL, AsyncLogger::runLoop, this);
 }
 
@@ -87,6 +89,8 @@ AsyncLogger::~AsyncLogger() {
     //让线程正常退出，让主线程去收拾
     _exit = true;
     pthread_join(_threadId, NULL);
+    //销毁互斥锁
+    pthread_mutex_destroy(&_mutex);
 }
 
 void LogManager::setLogger(Logger *logger) {

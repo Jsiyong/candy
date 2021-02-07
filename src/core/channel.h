@@ -7,6 +7,7 @@
 
 #include "http.h"
 #include <string>
+#include <vector>
 
 /**
  * 通道，包装了读写事件
@@ -48,7 +49,7 @@ private:
 
     short _state;//通道的状态
 
-    std::string _readBuff;//读缓冲区
+    std::vector<char> _readBuff;//读缓冲区
 
     HttpRequest *_httpRequest;//请求
     HttpResponse *_httpResponse;//响应

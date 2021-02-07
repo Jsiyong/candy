@@ -59,15 +59,13 @@ void Channel::doRead() {
         if (0 > size) {
             //假错
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                break;
+                error("read error:%s", strerror(errno));
+                _httpRequest->setData(&_readBuff);
+//                close(_fd);
+                //通道的状态变为关闭
+                _state = State::CLOSE;
             }
-
-            _httpRequest->setData(&_readBuff);
-            close(_fd);
-            //通道的状态变为关闭
-            _state = State::CLOSE;
             break;
-
         } else if (0 == size) {
             info("client disconnect.");
             info("recv all data:%s", _readBuff.data());
@@ -81,7 +79,7 @@ void Channel::doRead() {
 
             break;
         } else {
-            _readBuff.append(buf, size);
+            _readBuff.assign(buf, buf + size);
         }
     }
 }

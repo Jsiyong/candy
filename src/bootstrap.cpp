@@ -6,7 +6,7 @@
 #include "conf/servconf.h"
 #include "startup/cmdparser.h"
 #include "log/logger.h"
-#include "core/servbase.h"
+#include "core/server.h"
 
 static Logger *pLogger = NULL;
 static LogAppender *pLogAppender = NULL;
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.host, servConf.mode);
 
     //3:启动服务器
-    ServBase servBase;
+    Server servBase;
     servBase.startAt(servConf.host, servConf.port);
 
     //挂上清理函数
