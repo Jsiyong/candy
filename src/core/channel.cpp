@@ -3,7 +3,6 @@
 //
 
 #include "channel.h"
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -20,8 +19,8 @@ int Channel::fd() const {
     return _fd;
 }
 
-Channel::Channel(int fd, short type)
-        : _fd(fd), _type(type), _state(State::ACTIVE) {
+Channel::Channel(int fd)
+        : _fd(fd), _state(State::ACTIVE) {
 
     //ip地址
     //请求和响应
@@ -37,12 +36,7 @@ Channel::Channel(int fd, short type)
     char iptmp[IP_SIZE];
     inet_ntop(AF_INET, &raddr.sin_addr, iptmp, socklen);
     _host = iptmp;
-
     _port = ntohs(raddr.sin_port);
-}
-
-short Channel::getType() const {
-    return _type;
 }
 
 Channel::~Channel() {

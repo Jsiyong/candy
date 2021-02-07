@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     //1：参数解析
     CmdParser::parse(argc, argv);
 
-    //日志模块初始化，采用异步日志的形式
+    //2：日志模块初始化，采用异步日志的形式
     pLogger = new Logger();
     pLogAppender = new ConsoleLogAppender();
     pLogger->addAppender(pLogAppender);
@@ -34,8 +34,7 @@ int main(int argc, char **argv) {
 
     //3:启动服务器
     ServBase servBase;
-    servBase.start(servConf.host, servConf.port);
-    servBase.run();
+    servBase.startAt(servConf.host, servConf.port);
 
     //挂上清理函数
     atexit(beforeExit);

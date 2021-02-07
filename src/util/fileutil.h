@@ -5,6 +5,8 @@
 #ifndef CANDY_FILEUTIL_H
 #define CANDY_FILEUTIL_H
 
+#include <fcntl.h>
+
 /**
  * 文件相关工具类
  */

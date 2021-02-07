@@ -5,9 +5,9 @@
 #ifndef CANDY_SERVBASE_H
 #define CANDY_SERVBASE_H
 
-#include <atomic>
 #include "channel.h"
-#include "selector.h"
+#include "poller.h"
+#include "acceptor.h"
 
 struct ServBase {
 
@@ -15,17 +15,11 @@ struct ServBase {
 
     ~ServBase();
 
-    void start(const char *host, unsigned short port);
-
-    void run();
-
+    void startAt(const char *host, unsigned short port);
 
 private:
-    std::atomic<bool> _exit;
 
-    int _servfd;
-    Channel *_listenChannel;
-    Selector *_selector;
+    Acceptor *_acceptor;
 };
 
 #endif //CANDY_SERVBASE_H

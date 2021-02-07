@@ -6,6 +6,10 @@
 #define CANDY_LOGGER_H
 
 #include <list>
+#include <errno.h>
+#include <string.h>
+#include <pthread.h>
+
 #include "../util/singleton.h"
 #include "logappender.h"
 
