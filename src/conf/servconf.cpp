@@ -1,7 +1,7 @@
 //
 // Created by Jsiyong on 2021-02-03.
 //
-#include "serv-conf.h"
+#include "servconf.h"
 
 //服务器默认配置
 struct ServConf servConf = {

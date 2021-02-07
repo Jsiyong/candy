@@ -2,12 +2,12 @@
 // Created by Jsiyong on 2021-02-03.
 //
 
-#ifndef CANDY_LOG_APPENDER_H
-#define CANDY_LOG_APPENDER_H
+#ifndef CANDY_LOGAPPENDER_H
+#define CANDY_LOGAPPENDER_H
 
 #include <list>
-#include "log-event.h"
-#include "log-layout.h"
+#include "logevent.h"
+#include "loglayout.h"
 
 /**
  * 日志输出到不同的地方
@@ -56,4 +56,4 @@ struct FileLogAppender : public LogAppender {
     void append(const LoggingEvent &event) override;
 };
 
-#endif //CANDY_LOG_APPENDER_H
+#endif //CANDY_LOGAPPENDER_H

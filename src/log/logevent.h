@@ -2,8 +2,8 @@
 // Created by Jsiyong on 2021-02-03.
 //
 
-#ifndef CANDY_LOG_EVENT_H
-#define CANDY_LOG_EVENT_H
+#ifndef CANDY_LOGEVENT_H
+#define CANDY_LOGEVENT_H
 
 #include <string>
 #include <vector>
@@ -102,4 +102,4 @@ private:
     std::string _logName;//日志名称
 };
 
-#endif //CANDY_LOG_EVENT_H
+#endif //CANDY_LOGEVENT_H

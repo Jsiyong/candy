@@ -7,7 +7,7 @@
 
 #include <list>
 #include "../util/singleton.h"
-#include "log-appender.h"
+#include "logappender.h"
 
 /**************************************
  * 日志记录的宏

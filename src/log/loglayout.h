@@ -2,11 +2,11 @@
 // Created by Jsiyong on 2021-02-03.
 //
 
-#ifndef CANDY_LOG_LAYOUT_H
-#define CANDY_LOG_LAYOUT_H
+#ifndef CANDY_LOGLAYOUT_H
+#define CANDY_LOGLAYOUT_H
 
 #include <map>
-#include "log-event.h"
+#include "logevent.h"
 
 enum LogColor {
     BLACK,
@@ -77,4 +77,4 @@ protected:
 };
 
 
-#endif //CANDY_LOG_LAYOUT_H
+#endif //CANDY_LOGLAYOUT_H

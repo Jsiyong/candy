@@ -3,10 +3,10 @@
 //
 
 #include <stdlib.h>
-#include "conf/serv-conf.h"
-#include "startup/cmd-parser.h"
+#include "conf/servconf.h"
+#include "startup/cmdparser.h"
 #include "log/logger.h"
-#include "core/serv-base.h"
+#include "core/servbase.h"
 
 static Logger *pLogger = NULL;
 static LogAppender *pLogAppender = NULL;
