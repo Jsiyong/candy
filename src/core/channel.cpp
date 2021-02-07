@@ -58,8 +58,13 @@ void Channel::doRead() {
         int size = ::read(_fd, buf, MAX_BUFF_SIZE);
         if (0 > size) {
             //假错
+            if (errno == EINTR) {
+                //被信号打断
+                continue;
+            }
+            //读完了
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                error("read error:%s", strerror(errno));
+                error("read complete");
                 _httpRequest->setData(&_readBuff);
 //                close(_fd);
                 //通道的状态变为关闭
