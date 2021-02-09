@@ -29,11 +29,6 @@ struct StringBuffer {
  */
 enum class HttpRequestDecodeState {
     INVALID,//无效
-    INVALID_METHOD,//无效请求方法
-    INVALID_URI,//无效的请求路径
-    INVALID_VERSION,//无效的协议版本号
-    INVALID_HEADER,//无效请求头
-
 
     START,//请求行开始
     METHOD,//请求方法
@@ -59,15 +54,12 @@ enum class HttpRequestDecodeState {
     HEADER_VALUE,//值
 
     WHEN_CR,//遇到一个回车之后
-
     CR_LF,//回车换行
-
     CR_LF_CR,//回车换行之后的状态
-
 
     BODY,//请求体
 
-    COMPLETE,//完成
+    COMPLETE//完成
 };
 
 /**
@@ -97,9 +89,7 @@ struct HttpRequest : public HttpBase {
      * @param buf
      * @return
      */
-    void tryDecode(const std::vector<char> &buf);
-
-    void tryDecode();
+    void tryDecode(std::vector<char> &buf);
 
     const std::string &getMethod() const;
 
@@ -115,11 +105,21 @@ struct HttpRequest : public HttpBase {
 
     const std::vector<char> &getBody() const;
 
-    void setData(const std::vector<char> *data);
+    HttpRequestDecodeState getDecodeState() const;
 
 private:
 
-    void parseInternal(const char *buf, int size);
+    /**
+     * 内部解析http协议
+     * @param buf
+     * @param end
+     */
+    void parseInternal(char *buf, size_t end);
+
+    /**
+     * 清空操作
+     */
+    void clear();
 
 private:
 
@@ -136,9 +136,8 @@ private:
 
     std::vector<char> _body;//请求体
 
-    int _nextPos = 0;//下一个位置的
-
-    const std::vector<char> *_data = NULL;//所解析的数据指针
+    size_t _nextPos = 0;//下一个位置的
+    size_t _contentLength = 0;//body的长度
 
     HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
 };

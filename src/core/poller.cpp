@@ -3,6 +3,7 @@
 //
 #include "../log/logger.h"
 #include "poller.h"
+#include <unistd.h>
 
 #define MAX_EVENT 1024
 #define IP_SIZE 20
@@ -53,10 +54,10 @@ void *Poller::execEventLoop(void *param) {
             if (events[i].events & EPOLLIN) {
                 //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
                 //客户端的读事件产生
-                channel->doRead();
+                channel->read();
                 HttpRequest *pRequest = channel->getHttpRequest();
-                pRequest->tryDecode();
-
+                pRequest->tryDecode(channel->getReadBuff());
+#if 0
                 info("[method]%s", pRequest->getMethod());
                 info("[url]%s", pRequest->getUrl());
                 info("[request params]");
@@ -73,13 +74,17 @@ void *Poller::execEventLoop(void *param) {
                     trace("-- value: %s", h.second);
                 }
                 info("[body]%s", pRequest->getBody());
+#endif
+                warn("[body size]%lld", pRequest->getBody().size());
 
                 //如果是可写事件触发
-                channel->doWrite();
-
-                if (channel->getState() == Channel::CLOSE) {
-                    pPoller->removeChannelInternal(channel);
+                if (pRequest->getDecodeState() == HttpRequestDecodeState::COMPLETE) {
+                    channel->write();
                 }
+
+//                if (channel->getState() == Channel::CLOSE) {
+//                    pPoller->removeChannelInternal(channel);
+//                }
             }
         }
     }

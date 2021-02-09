@@ -26,9 +26,9 @@ struct Channel {
 
     ~Channel();
 
-    void doRead();
+    void read();
 
-    void doWrite();
+    void write();
 
     int fd() const;
 
@@ -39,6 +39,8 @@ struct Channel {
     int getPort() const;
 
     HttpRequest *getHttpRequest() const;
+
+    std::vector<char> &getReadBuff();
 
 private:
 

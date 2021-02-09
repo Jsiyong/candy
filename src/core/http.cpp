@@ -53,13 +53,23 @@ response
 //首先解析请求行
 //接着解析请求头
 //最后解析请求体
-void HttpRequest::tryDecode(const std::vector<char> &buf) {
-    this->parseInternal(buf.data(), buf.size());
+void HttpRequest::tryDecode(std::vector<char> &buf) {
+    if (buf.empty()) {
+        return;
+    }
+    if (_decodeState == HttpRequestDecodeState::COMPLETE) {
+        //如果解析完成，则再解析一遍
+        this->clear();
+    }
+    this->parseInternal(buf.data() + _nextPos, buf.size());
+#if 0
+    //如果是长连接，可能会出现上一个请求解析完了，下面会解析下一个请求，所以清空之前解析玩的数据
+    buf.assign(buf.begin() + _nextPos, buf.end());
+#endif
 }
 
 //解析请求行
-void HttpRequest::parseInternal(const char *buf, int size) {
-
+void HttpRequest::parseInternal(char *buf, size_t end) {
     StringBuffer method;
     StringBuffer url;
 
@@ -72,21 +82,13 @@ void HttpRequest::parseInternal(const char *buf, int size) {
     StringBuffer headerKey;
     StringBuffer headerValue;
 
-    int bodyLength = 0;
-
-    char *p0 = const_cast<char *>(buf + _nextPos);//去掉const限制
-
     while (_decodeState != HttpRequestDecodeState::INVALID
-           && _decodeState != HttpRequestDecodeState::INVALID_METHOD
-           && _decodeState != HttpRequestDecodeState::INVALID_URI
-           && _decodeState != HttpRequestDecodeState::INVALID_VERSION
-           && _decodeState != HttpRequestDecodeState::INVALID_HEADER
            && _decodeState != HttpRequestDecodeState::COMPLETE
-           && _nextPos < size) {
+           && _nextPos < end) {
 
-        char ch = *p0;//当前的字符
-        char *p = p0++;//指针偏移
-        int scanPos = _nextPos++;//下一个指针往后偏移
+        _nextPos++;//比较完之后下一个指针往后偏移
+        char ch = *buf;//当前的字符
+        char *p = buf++;//指针偏移
 
         switch (_decodeState) {
             case HttpRequestDecodeState::START: {
@@ -110,7 +112,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                     _method = method;
                     _decodeState = HttpRequestDecodeState::BEFORE_URI;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID_METHOD;//其他情况是无效的请求方法
+                    _decodeState = HttpRequestDecodeState::INVALID;//其他情况是无效的请求方法
                 }
                 break;
             }
@@ -143,7 +145,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
             }
             case HttpRequestDecodeState::BEFORE_URI_PARAM_KEY: {
                 if (isblank(ch) || ch == LF || ch == CR) {
-                    _decodeState = HttpRequestDecodeState::INVALID_URI;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 } else {
                     requestParamKey.begin = p;
                     _decodeState = HttpRequestDecodeState::URI_PARAM_KEY;
@@ -155,7 +157,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                     requestParamKey.end = p;
                     _decodeState = HttpRequestDecodeState::BEFORE_URI_PARAM_VALUE;//开始解析参数值
                 } else if (isblank(ch)) {
-                    _decodeState = HttpRequestDecodeState::INVALID_URI;//无效的请求参数
+                    _decodeState = HttpRequestDecodeState::INVALID;//无效的请求参数
                 } else {
                     //do nothing
                 }
@@ -163,7 +165,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
             }
             case HttpRequestDecodeState::BEFORE_URI_PARAM_VALUE: {
                 if (isblank(ch) || ch == LF || ch == CR) {
-                    _decodeState = HttpRequestDecodeState::INVALID_URI;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 } else {
                     requestParamValue.begin = p;
                     _decodeState = HttpRequestDecodeState::URI_PARAM_VALUE;
@@ -211,7 +213,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                     version.begin = p;
                     _decodeState = HttpRequestDecodeState::VERSION;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID_VERSION;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 }
                 break;
             }
@@ -227,7 +229,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                 } else if (isdigit(ch)) {
                     //do nothing
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID_VERSION;//不能不是数字
+                    _decodeState = HttpRequestDecodeState::INVALID;//不能不是数字
                 }
                 break;
             }
@@ -236,7 +238,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                 if (isdigit(ch)) {
                     _decodeState = HttpRequestDecodeState::VERSION;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID_VERSION;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 }
                 break;
             }
@@ -260,7 +262,7 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                     _decodeState = HttpRequestDecodeState::HEADER_AFTER_COLON;
                 } else {
                     //冒号之前的状态不能是空格之外的其他字符
-                    _decodeState = HttpRequestDecodeState::INVALID_HEADER;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 }
                 break;
             }
@@ -307,29 +309,29 @@ void HttpRequest::parseInternal(const char *buf, int size) {
                 if (ch == LF) {
                     //如果是\r接着\n 那么判断是不是需要解析请求体
                     if (_headers.count("Content-Length") > 0) {
-                        bodyLength = atoi(_headers["Content-Length"].c_str());
-                        if (bodyLength > 0) {
-                            _decodeState = HttpRequestDecodeState::BODY;//解析请求体
-                        } else {
-                            _decodeState = HttpRequestDecodeState::COMPLETE;//完成了
-                        }
-                    } else {
-                        if (scanPos < size) {
-                            bodyLength = size - scanPos;
+                        _contentLength = atoi(_headers["Content-Length"].c_str());
+                        if (_contentLength > 0) {
+                            _body.reserve(_contentLength);//预分配body的大小,提高下面构造数组的效率
                             _decodeState = HttpRequestDecodeState::BODY;//解析请求体
                         } else {
                             _decodeState = HttpRequestDecodeState::COMPLETE;
                         }
+                    } else {
+                        _decodeState = HttpRequestDecodeState::COMPLETE;
                     }
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID_HEADER;
+                    _decodeState = HttpRequestDecodeState::INVALID;
                 }
                 break;
             }
             case HttpRequestDecodeState::BODY: {
                 //解析请求体
-                _body.assign(p, p + bodyLength);
-                _decodeState = HttpRequestDecodeState::COMPLETE;
+                _body.push_back(ch);
+                if (_body.size() < _contentLength) {
+                    //如果还没满足大小要求，则继续解析请求体
+                } else {
+                    _decodeState = HttpRequestDecodeState::COMPLETE;
+                }
                 break;
             }
             default:
@@ -366,12 +368,26 @@ const std::vector<char> &HttpRequest::getBody() const {
     return _body;
 }
 
-void HttpRequest::setData(const std::vector<char> *data) {
-    _data = data;
+void HttpRequest::clear() {
+    _method.clear();//请求方法
+
+    _url.clear();//请求路径[不包含请求参数]
+
+    _requestParams.clear();//请求参数
+
+    _protocol.clear();//协议
+    _version.clear();//版本
+
+    _headers.clear();//所有的请求头
+
+    _body.clear();//请求体
+
+//    _nextPos = 0;//下一个位置的..这个不能清除，否则解析出错
+    _contentLength = 0;//body的长度
+
+    _decodeState = HttpRequestDecodeState::START;//解析状态
 }
 
-void HttpRequest::tryDecode() {
-    if (_data) {
-        this->tryDecode(*_data);
-    }
+HttpRequestDecodeState HttpRequest::getDecodeState() const {
+    return _decodeState;
 }

@@ -49,11 +49,10 @@ Channel::~Channel() {
     close(_fd);
 }
 
-void Channel::doRead() {
+void Channel::read() {
 
+    char buf[MAX_BUFF_SIZE];
     while (true) {
-
-        char buf[MAX_BUFF_SIZE] = {0};
 
         int size = ::read(_fd, buf, MAX_BUFF_SIZE);
         if (0 > size) {
@@ -65,17 +64,14 @@ void Channel::doRead() {
             //读完了
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 error("read complete");
-                _httpRequest->setData(&_readBuff);
 //                close(_fd);
                 //通道的状态变为关闭
-                _state = State::CLOSE;
+//                _state = State::CLOSE;
             }
             break;
         } else if (0 == size) {
-            info("client disconnect.");
-            info("recv all data:%s", _readBuff.data());
-
-            _httpRequest->setData(&_readBuff);
+            error("client disconnect.");
+//            info("recv all data:%s", _readBuff.data());
 
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
             close(_fd);
@@ -84,7 +80,8 @@ void Channel::doRead() {
 
             break;
         } else {
-            _readBuff.assign(buf, buf + size);
+            _readBuff.insert(_readBuff.end(), buf, buf + size);
+//            trace("recv size[%d],buff size[%d]", size, _readBuff.size());
         }
     }
 }
@@ -101,7 +98,7 @@ int Channel::getPort() const {
     return _port;
 }
 
-void Channel::doWrite() {
+void Channel::write() {
 
     char resp[MAX_BUFF_SIZE] = {0};
     char *p = resp;
@@ -127,10 +124,15 @@ void Channel::doWrite() {
 
     strcat(p, body);
     trace("response data:%s", resp);
-    write(_fd, resp, strlen(resp));
+    trace("response ok!!");
+    ::write(_fd, resp, strlen(resp));
 
 }
 
 HttpRequest *Channel::getHttpRequest() const {
     return _httpRequest;
+}
+
+std::vector<char> &Channel::getReadBuff() {
+    return _readBuff;
 }
