@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     CmdParser::parse(argc, argv);
 
     //2：日志模块初始化，采用异步日志的形式
-    pLogger = new Logger();
+    pLogger = new AsyncLogger();
     pLogAppender = new ConsoleLogAppender();
     pLogger->addAppender(pLogAppender);
     LogManager::getInstance()->setLogger(pLogger);

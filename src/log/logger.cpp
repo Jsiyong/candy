@@ -43,9 +43,14 @@ const std::string &Logger::getName() const {
     return _name;
 }
 
+Logger::~Logger() {
+
+}
+
 AsyncLogger::AsyncLogger() {
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
+    pthread_cond_init(&_cond, NULL);
     pthread_create(&_threadId, NULL, AsyncLogger::runLoop, this);
 }
 
@@ -59,6 +64,9 @@ void *AsyncLogger::runLoop(void *param) {
         //为空，就一直等，防止信号打断wait
         while (logger->_events.empty()) {
             pthread_cond_wait(&logger->_cond, &logger->_mutex);//令进程等待在条件变量上
+            if (logger->_exit) {
+                pthread_exit(NULL);
+            }
         }
 
         //消费队列所有的数据
@@ -83,14 +91,17 @@ void AsyncLogger::write(const LoggingEvent &event) {
     pthread_mutex_lock(&_mutex);//拿到互斥锁
     _events.push_back(event);
     pthread_mutex_unlock(&_mutex); //释放互斥锁
+    pthread_cond_broadcast(&_cond);
 }
 
 AsyncLogger::~AsyncLogger() {
     //让线程正常退出，让主线程去收拾
     _exit = true;
+    pthread_cond_broadcast(&_cond);
     pthread_join(_threadId, NULL);
     //销毁互斥锁
     pthread_mutex_destroy(&_mutex);
+    pthread_cond_destroy(&_cond);
 }
 
 void LogManager::setLogger(Logger *logger) {

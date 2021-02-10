@@ -45,6 +45,8 @@ struct Logger {
 
     Logger();
 
+    virtual ~Logger();
+
     /**
      * 添加一个输出地
      * @param appender 输出地，可以是文件，或者控制台
@@ -81,7 +83,7 @@ struct AsyncLogger : public Logger {
 
     AsyncLogger();
 
-    ~AsyncLogger();
+    ~AsyncLogger() override;
 
 private:
     virtual void write(const LoggingEvent &event);
