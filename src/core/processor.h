@@ -12,8 +12,18 @@
  * 这个结合线程池之后，可能这个对象的数据会在不同的线程中使用和修改
  * 所以这个对象对外的处理方法需要加锁
  */
-struct SocketProcessor {
+#include "../util/threadpool.h"
 
+struct SocketProcessor : Runnable {
+
+    explicit SocketProcessor(int fd);
+
+    ~SocketProcessor() override;
+
+    /**
+     * 需要加锁，因为有可能解析协议等会有多个线程同时进行
+     */
+    void run() override;
 
 private:
     Channel *_channel = NULL;

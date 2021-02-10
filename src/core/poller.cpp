@@ -10,6 +10,9 @@
 
 Poller::Poller() {
 
+    //线程池，核心线程5个，最大线程10个，每隔30秒查询一次
+    _executor = new ThreadPoolExecutor(5, 10, 30);
+
     _epfd = epoll_create(1);
     exit_if(_epfd < 0, "epoll_create error:%s", strerror(errno));
     info("epoll create success!!");
@@ -21,17 +24,19 @@ Poller::Poller() {
 }
 
 void Poller::addChannel(int fd, unsigned int events) {
+    static int clientNum = 0;
+    clientNum++;
     //找到一块空的地方放
-    Channel *channel = new Channel(fd);
-    //存放起来，方便之后通过索引找到这一块东西
-    _channels.push_back(channel);
-    info("current client num:%d", _channels.size() - 1);
+    //封装为socketProcessor
+    SocketProcessor *socketProcessor = new SocketProcessor(fd);
+    _socketProcessors.push_back(socketProcessor);
+    info("current client num:%d", clientNum);
 
     //设置为非阻塞
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.events = events;
-    event.data.ptr = channel;//添加channel上去
+    event.data.ptr = socketProcessor;//添加channel上去
     int ret = epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &event);
     exit_if(ret < 0, "epoll_ctl add error:%s", strerror(errno));
 }
@@ -49,50 +54,18 @@ void *Poller::execEventLoop(void *param) {
         exit_if(eventCount == -1 && errno != EINTR, "epoll_wait error:%s", strerror(errno));
         //处理每一个事件
         for (int i = 0; i < eventCount; ++i) {
-            Channel *channel = (Channel *) events[i].data.ptr;
-
+            SocketProcessor *pSocketProcessor = (SocketProcessor *) events[i].data.ptr;
             if (events[i].events & EPOLLIN) {
-                //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
-                //客户端的读事件产生
-                channel->read();
-                HttpRequest *pRequest = channel->getHttpRequest();
-                pRequest->tryDecode(channel->getReadBuff());
-#if 0
-                info("[method]%s", pRequest->getMethod());
-                info("[url]%s", pRequest->getUrl());
-                info("[request params]");
-                for (auto &p : pRequest->getRequestParams()) {
-                    trace("++ key: %s", p.first);
-                    trace("-- value: %s", p.second);
-                }
-
-                info("[protocol]%s", pRequest->getProtocol());
-                info("[version]%s", pRequest->getVersion());
-                info("[request headers]");
-                for (auto &h : pRequest->getHeaders()) {
-                    trace("++ key: %s", h.first);
-                    trace("-- value: %s", h.second);
-                }
-                info("[body]%s", pRequest->getBody());
-#endif
-                warn("[body size]%lld", pRequest->getBody().size());
-
-                //如果是可写事件触发
-                if (pRequest->getDecodeState() == HttpRequestDecodeState::COMPLETE) {
-                    channel->write();
-                }
-
-//                if (channel->getState() == Channel::CLOSE) {
-//                    pPoller->removeChannelInternal(channel);
-//                }
+                //提交任务
+                pPoller->_executor->submit(pSocketProcessor);
             }
         }
     }
 }
 
 Poller::~Poller() {
-    for (Channel *channel:_channels) {
-        delete channel;
+    for (SocketProcessor *socketProcessor:_socketProcessors) {
+        delete socketProcessor;
     }
     _exit = true;
     pthread_join(_threadId, NULL);
@@ -100,6 +73,7 @@ Poller::~Poller() {
 }
 
 void Poller::removeChannelInternal(Channel *channel) {
+#if 0
     //从epoll树上删除
     int clifd = channel->fd();
     epoll_ctl(_epfd, EPOLL_CTL_DEL, clifd, NULL);
@@ -111,5 +85,6 @@ void Poller::removeChannelInternal(Channel *channel) {
 
     //删除节点的内存
     delete channel;
+#endif
 }
 

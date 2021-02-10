@@ -142,3 +142,7 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     pthread_cond_destroy(&_cond);
     trace("pthread release ok!!");
 }
+
+Runnable::~Runnable() {
+
+}

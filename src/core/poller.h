@@ -8,6 +8,7 @@
 #include <list>
 #include <sys/epoll.h>
 #include "channel.h"
+#include "processor.h"
 
 /**
  * 选择器，使用epoll实现
@@ -29,14 +30,16 @@ struct Poller {
 
 private:
 
+    void removeChannelInternal(Channel *channel);
+
     /**
      * 开始执行事件循环
      */
     static void *execEventLoop(void *param);
 
-    void removeChannelInternal(Channel *channel);
+    std::list<SocketProcessor *> _socketProcessors;
 
-    std::list<Channel *> _channels;
+    ThreadPoolExecutor *_executor = NULL;
 
     bool _exit = false;//线程是否退出
 

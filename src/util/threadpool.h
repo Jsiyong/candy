@@ -13,6 +13,8 @@
  * 接口
  */
 struct Runnable {
+    virtual ~Runnable();
+
     virtual void run() = 0;
 };
 
