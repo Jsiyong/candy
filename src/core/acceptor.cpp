@@ -75,7 +75,8 @@ void Acceptor::acceptLoop() {
         exit_if(ret < 0, "addFlag2Fd FD_CLOEXEC error:%s", strerror(errno));
 
         //将他添加进入poller选择器中，采用边缘非阻塞形式触发，监听可读事件和可写事件
-        _poller->addChannel(clientfd, EPOLLIN | EPOLLET/*| EPOLLOUT*/);
+        //EPOLLONESHOT避免同一个事件被触发多次
+        _poller->addChannel(clientfd, EPOLLIN | EPOLLET | EPOLLONESHOT/*| EPOLLOUT*/);
     }
 }
 

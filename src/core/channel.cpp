@@ -64,6 +64,7 @@ void Channel::read() {
             //读完了
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 error("read complete");
+                _readCallback();
 //                close(_fd);
                 //通道的状态变为关闭
 //                _state = State::CLOSE;
@@ -135,4 +136,8 @@ HttpRequest *Channel::getHttpRequest() const {
 
 std::vector<char> &Channel::getReadBuff() {
     return _readBuff;
+}
+
+void Channel::setReadCallback(const std::function<void()> &readCallback) {
+    _readCallback = readCallback;
 }

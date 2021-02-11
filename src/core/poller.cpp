@@ -29,6 +29,15 @@ void Poller::addChannel(int fd, unsigned int events) {
     //找到一块空的地方放
     //封装为socketProcessor
     SocketProcessor *socketProcessor = new SocketProcessor(fd);
+    socketProcessor->getChannel()->setReadCallback([this, events, socketProcessor, fd]() {
+        //设置为非阻塞
+        struct epoll_event event;
+        memset(&event, 0, sizeof(event));
+        event.events = events;
+        event.data.ptr = socketProcessor;//添加channel上去
+        epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &event);
+    });
+
     _socketProcessors.push_back(socketProcessor);
     info("current client num:%d", clientNum);
 

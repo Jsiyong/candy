@@ -47,3 +47,7 @@ SocketProcessor::SocketProcessor(int fd) {
 SocketProcessor::~SocketProcessor() {
     delete _channel;
 }
+
+Channel *SocketProcessor::getChannel() const {
+    return _channel;
+}

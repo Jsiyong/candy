@@ -25,6 +25,8 @@ struct SocketProcessor : Runnable {
      */
     void run() override;
 
+    Channel *getChannel() const;
+
 private:
     Channel *_channel = NULL;
     pthread_mutex_t _mutex;//互斥锁

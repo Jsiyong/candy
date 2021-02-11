@@ -8,6 +8,7 @@
 #include "http.h"
 #include <string>
 #include <vector>
+#include <functional>
 
 /**
  * 通道，包装了读写事件
@@ -42,7 +43,11 @@ struct Channel {
 
     std::vector<char> &getReadBuff();
 
+    void setReadCallback(const std::function<void()> &readCallback);
+
 private:
+
+    std::function<void()> _readCallback;
 
     int _fd;//对应的文件描述符
 
