@@ -3,6 +3,7 @@
 //
 #include "../log/logger.h"
 #include "poller.h"
+#include "../util/fileutil.h"
 #include <unistd.h>
 
 #define MAX_EVENT 1024
@@ -23,31 +24,35 @@ Poller::Poller() {
     pthread_create(&_threadId, NULL, &Poller::execEventLoop, this);
 }
 
-void Poller::addChannel(int fd, unsigned int events) {
+void Poller::attach(int fd) {
     static int clientNum = 0;
     clientNum++;
     //找到一块空的地方放
     //封装为socketProcessor
     SocketProcessor *socketProcessor = new SocketProcessor(fd);
-    socketProcessor->getChannel()->setReadCallback([this, events, socketProcessor, fd]() {
-        //设置为非阻塞
-        struct epoll_event event;
-        memset(&event, 0, sizeof(event));
-        event.events = events;
-        event.data.ptr = socketProcessor;//添加channel上去
-        epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &event);
+    //解析完协议之后，就需要开启epoll的写事件,
+    socketProcessor->setOnAfterReadCompletedRequest([this, fd]() {
+        this->updateEvent(fd, EPOLLOUT);
+    });
+    //解析到未完整的协议，就重新开启epoll读事件
+    socketProcessor->setOnAfterReadUnCompletedRequest([this, fd]() {
+        this->updateEvent(fd, EPOLLIN);
+    });
+    //写完完就开始重新触发读事件
+    socketProcessor->setOnAfterWriteCompletedResponse([this, fd]() {
+        this->updateEvent(fd, EPOLLIN);
+    });
+    //写不完就继续写
+    socketProcessor->setOnAfterWriteUnCompletedResponse([this, fd]() {
+        this->updateEvent(fd, EPOLLOUT);
     });
 
-    _socketProcessors.push_back(socketProcessor);
+    //TODO 需要加锁
+    _socketProcessors.insert(std::make_pair(fd, socketProcessor));
     info("current client num:%d", clientNum);
 
-    //设置为非阻塞
-    struct epoll_event event;
-    memset(&event, 0, sizeof(event));
-    event.events = events;
-    event.data.ptr = socketProcessor;//添加channel上去
-    int ret = epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &event);
-    exit_if(ret < 0, "epoll_ctl add error:%s", strerror(errno));
+    //添加事件
+    this->addEvent(fd);
 }
 
 void *Poller::execEventLoop(void *param) {
@@ -63,19 +68,19 @@ void *Poller::execEventLoop(void *param) {
         exit_if(eventCount == -1 && errno != EINTR, "epoll_wait error:%s", strerror(errno));
         //处理每一个事件
         for (int i = 0; i < eventCount; ++i) {
-            SocketProcessor *pSocketProcessor = (SocketProcessor *) events[i].data.ptr;
-            if (events[i].events & EPOLLIN) {
+            SocketProcessor *pSocketProcessor = pPoller->_socketProcessors[events[i].data.fd];
+            if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
                 //提交任务
                 pPoller->_executor->submit(pSocketProcessor);
+            }
+            if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
+                close(pSocketProcessor->getChannel()->fd());
             }
         }
     }
 }
 
 Poller::~Poller() {
-    for (SocketProcessor *socketProcessor:_socketProcessors) {
-        delete socketProcessor;
-    }
     _exit = true;
     pthread_join(_threadId, NULL);
     pthread_mutex_destroy(&_mutex);
@@ -95,5 +100,38 @@ void Poller::removeChannelInternal(Channel *channel) {
     //删除节点的内存
     delete channel;
 #endif
+}
+
+void Poller::addEvent(int fd) {
+    //设置为非阻塞
+    //设置他exec退出，同时设置为非阻塞
+    int ret = FileUtil::addFlag2Fd(fd, FD_CLOEXEC | O_NONBLOCK);
+    exit_if(ret < 0, "addFlag2Fd FD_CLOEXEC error:%s", strerror(errno));
+
+    struct epoll_event event;
+    memset(&event, 0, sizeof(event));
+    /**
+     * EPOLLIN 可读事件
+     * EPOLLET 边缘触发
+     * EPOLLONESHOT 一个事件只触发一次，因为一个事件只被触发一次且需要重置事件才能侦听下次是否发生
+     * EPOLLRDHUP 对端调用了close等，关闭了连接
+     */
+    event.events = EPOLLIN | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    event.data.fd = fd;
+    ret = epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &event);
+    exit_if(ret < 0, "epoll_ctl add error:%s", strerror(errno));
+}
+
+void Poller::updateEvent(int fd, uint32_t events) {
+    struct epoll_event event;
+    event.data.fd = fd;
+    event.events = events | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    int ret = epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &event);//注意是EPOLL_CTL_MOD修改
+    exit_if(ret < 0, "epoll_ctl mod error:%s", strerror(errno));
+}
+
+void Poller::removeEvent(int fd) {
+    int ret = epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
+    exit_if(ret < 0, "epoll_ctl del error:%s", strerror(errno));
 }
 

@@ -70,13 +70,9 @@ void Acceptor::acceptLoop() {
         inet_ntop(AF_INET, &clientaddr.sin_addr, ip, socklen);
         trace("[new conn]client host:%s, port:%d", ip, ntohs(clientaddr.sin_port));
 
-        //设置他exec退出，同时设置为非阻塞
-        int ret = FileUtil::addFlag2Fd(clientfd, FD_CLOEXEC | O_NONBLOCK);
-        exit_if(ret < 0, "addFlag2Fd FD_CLOEXEC error:%s", strerror(errno));
-
         //将他添加进入poller选择器中，采用边缘非阻塞形式触发，监听可读事件和可写事件
         //EPOLLONESHOT避免同一个事件被触发多次
-        _poller->addChannel(clientfd, EPOLLIN | EPOLLET | EPOLLONESHOT/*| EPOLLOUT*/);
+        _poller->attach(clientfd);
     }
 }
 

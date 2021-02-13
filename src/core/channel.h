@@ -15,14 +15,6 @@
  */
 struct Channel {
 
-    /**
-     * Channel的状态
-     */
-    enum State {
-        ACTIVE = 0,//活跃的状态
-        CLOSE//已经关闭的状态了
-    };
-
     explicit Channel(int fd);
 
     ~Channel();
@@ -43,11 +35,9 @@ struct Channel {
 
     std::vector<char> &getReadBuff();
 
-    void setReadCallback(const std::function<void()> &readCallback);
+    bool finishWrite();
 
 private:
-
-    std::function<void()> _readCallback;
 
     int _fd;//对应的文件描述符
 
@@ -57,9 +47,6 @@ private:
     short _state;//通道的状态
 
     std::vector<char> _readBuff;//读缓冲区
-
-    HttpRequest *_httpRequest;//请求
-    HttpResponse *_httpResponse;//响应
 };
 
 #endif //CANDY_CHANNEL_H

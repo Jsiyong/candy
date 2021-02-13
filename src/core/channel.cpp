@@ -19,14 +19,9 @@ int Channel::fd() const {
     return _fd;
 }
 
-Channel::Channel(int fd)
-        : _fd(fd), _state(State::ACTIVE) {
+Channel::Channel(int fd) : _fd(fd) {
 
     //ip地址
-    //请求和响应
-    _httpRequest = new HttpRequest();
-
-    _httpResponse = new HttpResponse();
 
     //设置ip地址和端口
     struct sockaddr_in raddr;
@@ -40,12 +35,6 @@ Channel::Channel(int fd)
 }
 
 Channel::~Channel() {
-    //释放读写缓冲区
-
-    //释放请求和响应
-    delete _httpRequest;
-    delete _httpResponse;
-
     close(_fd);
 }
 
@@ -64,7 +53,6 @@ void Channel::read() {
             //读完了
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 error("read complete");
-                _readCallback();
 //                close(_fd);
                 //通道的状态变为关闭
 //                _state = State::CLOSE;
@@ -75,9 +63,8 @@ void Channel::read() {
 //            info("recv all data:%s", _readBuff.data());
 
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
-            close(_fd);
+//            close(_fd);
             //通道的状态变为关闭
-            _state = State::CLOSE;
 
             break;
         } else {
@@ -130,14 +117,10 @@ void Channel::write() {
 
 }
 
-HttpRequest *Channel::getHttpRequest() const {
-    return _httpRequest;
-}
-
 std::vector<char> &Channel::getReadBuff() {
     return _readBuff;
 }
 
-void Channel::setReadCallback(const std::function<void()> &readCallback) {
-    _readCallback = readCallback;
+bool Channel::finishWrite() {
+    return true;
 }
