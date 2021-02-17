@@ -26,19 +26,16 @@ enum class ParserState {
 	FAL_IN_FALSE,
 	FALS_IN_FALSE,
 
-	ARRAY,//解析数组
-
 	ESCAPE,//转义/
 
 	ERROR//错误的状态
 };
 
-bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
+JsonValue JsonParser::parse(const std::vector<char>& json) {
 
 	std::vector<char>::const_iterator p = json.begin();//当前的指针
 
 	ParserState state = ParserState::START;
-	ParserState preState = state;//前一个状态
 
 	std::list<JsonToken> tokens;//存放有效的token
 	//状态机自我运行中
@@ -55,9 +52,17 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 				tokens.push_back(JsonToken(TokenType::ObjectBegin, cur));
 				//下一步解析对象
 			}
+			else if (ch == '}') {
+				tokens.push_back(JsonToken(TokenType::ObjectEnd, cur));
+				state = ParserState::VALUE_END;
+			}
 			else if (ch == '[') {
 				tokens.push_back(JsonToken(TokenType::ArrayBegin, cur));
 				//解析数组
+			}
+			else if (ch == ']') {
+				tokens.push_back(JsonToken(TokenType::ArrayEnd, cur));
+				state = ParserState::VALUE_END;
 			}
 			else if (ch == '"') {
 				//字符串
@@ -95,6 +100,7 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 			}
 			break;
 		}
+
 		case ParserState::N_IN_NULL: {
 			if (ch == 'u') {
 				state = ParserState::NU_IN_NULL;
@@ -191,7 +197,7 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 		}
 		case ParserState::ESCAPE: {
 			//遇到转义的，回到前一个状态
-			state = preState;
+			state = ParserState::STRING;//转义是在字符串才有的，所以回到字符串状态
 			break;
 		}
 		case ParserState::STRING_BEGIN: {
@@ -269,6 +275,16 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 				tokens.push_back(JsonToken(TokenType::MemberSeparator, cur));
 				state = ParserState::START;
 			}
+			else if (ch == ']') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ArrayEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
+			else if (ch == '}') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ObjectEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
 			else if (isSpace(ch)) {
 				tokens.back().end = cur;
 				//如果是空格，说明是数字0
@@ -294,6 +310,16 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 				tokens.push_back(JsonToken(TokenType::MemberSeparator, cur));
 				state = ParserState::START;
 			}
+			else if (ch == ']') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ArrayEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
+			else if (ch == '}') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ObjectEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
 			else if (isSpace(ch)) {
 				tokens.back().end = cur;
 				state = ParserState::VALUE_END;//结束
@@ -314,6 +340,16 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 				tokens.push_back(JsonToken(TokenType::MemberSeparator, cur));
 				state = ParserState::START;
 			}
+			else if (ch == ']') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ArrayEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
+			else if (ch == '}') {
+				tokens.back().end = cur;
+				tokens.push_back(JsonToken(TokenType::ObjectEnd, cur));
+				state = ParserState::VALUE_END;//结束
+			}
 			else if (isSpace(ch)) {
 				tokens.back().end = cur;
 				state = ParserState::VALUE_END;
@@ -325,71 +361,68 @@ bool JsonParser::parse(const std::vector<char>& json, JsonValue& root) {
 		}
 
 		}
-		//记录前一个状态，方便回去
-		preState = state;
 	}
 	//若解析是错误的，直接返回
 	if (state == ParserState::ERROR) {
-		return false;
+		return JsonValue();
 	}
 	//生成jsonValue
-	return genJsonValueViaTokens(root, tokens);
+	return genJsonValueViaTokens(tokens);
 }
 
 bool JsonParser::isSpace(char ch) {
 	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
-bool JsonParser::genJsonValueViaTokens(JsonValue& root, std::list<JsonToken>& tokens) {
+JsonValue JsonParser::genJsonValueViaTokens(std::list<JsonToken>& tokens) {
 	//先出队一个元素
 	JsonToken token = tokens.front();
 	//当前处理的是值
 	tokens.pop_front();
 
 	if (TokenType::ObjectBegin == token.type) {
-		root.setType(ValueType::Object);
 		//当前处理的是对象
-		return genJsonObjectViaTokens(root, tokens);
+		return genJsonObjectViaTokens(tokens);
 	}
 	else if (TokenType::ArrayBegin == token.type) {
-		root.setType(ValueType::Array);
 		//当前处理的是数组
-		return genJsonArrayViaTokens(root, tokens);
+		return genJsonArrayViaTokens(tokens);
 	}
 	else {
 		if (TokenType::String == token.type) {
-			root.setType(ValueType::String);//当前是字符串
-			root._value._string->assign(token.start, token.end);
+			return JsonValue(token.start, token.end);//当前是字符串
 		}
 		else if (TokenType::True == token.type) {
-			root.setType(ValueType::Boolean);//当前是布尔型
-			root._value._bool = true;
+			return JsonValue(true);//当前是布尔型
 		}
 		else if (TokenType::False == token.type) {
-			root.setType(ValueType::Boolean);//当前是布尔型
-			root._value._bool = false;
+			return JsonValue(false);//当前是布尔型
 		}
 		else if (TokenType::Number == token.type) {
-			root.setType(ValueType::Real);
-			root._value._real = std::atof(std::string(token.start, token.end).c_str());
+			return JsonValue(std::atof(std::string(token.start, token.end).c_str()));//当前是实数
 		}
 		else if (TokenType::Null == token.type) {
-			root.setType(ValueType::Null);
+			return JsonValue();
 		}
 		else {
 			//do nothing
 		}
 	}
-	return true;
+	return JsonValue();
 }
 
 //因为栈的关系，导致列表的顺序是反的，所以需要倒过来
-bool JsonParser::genJsonArrayViaTokens(JsonValue& root, std::list<JsonToken>& tokens) {
+JsonValue JsonParser::genJsonArrayViaTokens(std::list<JsonToken>& tokens) {
+	JsonArray jsonArray;
 	//找到第一个']'然后不停出队
 	while (TokenType::ArrayEnd != tokens.front().type) {
-		JsonValue valueTmp;
-		genJsonValueViaTokens(valueTmp, tokens);
-		root._value._array->push_back(valueTmp);
+		jsonArray.append(genJsonValueViaTokens(tokens));
+
+		//如果还没有遇到]结束符队列就空了，说明格式错误
+		if (tokens.empty()) {
+			return JsonValue();
+		}
+
 		//然后去掉数组间的分割符
 		if (TokenType::MemberSeparator == tokens.front().type) {
 			tokens.pop_front();//','
@@ -398,15 +431,16 @@ bool JsonParser::genJsonArrayViaTokens(JsonValue& root, std::list<JsonToken>& to
 			//do nothing
 		}
 		else {
-			return false;
+			return JsonValue();
 		}
 	}
 	//循环结束后，类型为ArrayBegin，需要pop掉
 	tokens.pop_front();
-	return true;
+	return jsonArray;
 }
 
-bool JsonParser::genJsonObjectViaTokens(JsonValue& root, std::list<JsonToken>& tokens) {
+JsonValue JsonParser::genJsonObjectViaTokens(std::list<JsonToken>& tokens) {
+	JsonObject jsonObject;
 	//找到第一个'}'然后不停出队
 	while (TokenType::ObjectEnd != tokens.front().type) {
 		//再出队key
@@ -417,13 +451,19 @@ bool JsonParser::genJsonObjectViaTokens(JsonValue& root, std::list<JsonToken>& t
 		if (tokens.front().type != TokenType::ObjectKeyValueSeparator) {
 			return false;
 		}
+		//如果还没有遇到:队列就空了，说明格式错误
+		if (tokens.empty()) {
+			return JsonValue();
+		}
 		tokens.pop_front();//':'
 
-		//再出栈value
-		JsonValue valueTmp;
-		genJsonValueViaTokens(valueTmp, tokens);
+		//再出队value
+		jsonObject.insert(std::string(key.start, key.end), genJsonValueViaTokens(tokens));
 
-		root._value._object->insert(std::make_pair(std::string(key.start, key.end), valueTmp));
+		//如果还没有遇到}队列就空了，说明格式错误
+		if (tokens.empty()) {
+			return JsonValue();
+		}
 
 		//最后再去掉对象值之间的分割符
 		if (TokenType::MemberSeparator == tokens.front().type) {
@@ -433,36 +473,64 @@ bool JsonParser::genJsonObjectViaTokens(JsonValue& root, std::list<JsonToken>& t
 			//do nothing
 		}
 		else {
-			return false;
+			return JsonValue();
 		}
 	}
 	//循环结束后，类型为TokenType::ObjectBegin，需要pop掉
 	tokens.pop_front();
-	return true;
+	return jsonObject;
 }
 
+std::vector<char> JsonParser::parse(const JsonValue& root) {
+	std::vector<char> json;
 
-void JsonParser::parse(const JsonValue& root, std::vector<char>& json) {
-
-	switch (root._type)
+	switch (root.type())
 	{
-	case ValueType::Null: {
+	case JsonValueType::Null: {
 		json.insert(json.end(), { 'n','u','l','l' });
 		break;
 	}
-	case ValueType::Real: {
-		std::string str = std::to_string(root._value._real);
+	case JsonValueType::Real: {
+		std::string str = std::to_string(root.toDouble());
 		json.insert(json.end(), str.begin(), str.end());
 		break;
 	}
-	case ValueType::String: {
+	case JsonValueType::String: {
 		json.push_back('"');
-		json.insert(json.end(), root._value._string->begin(), root._value._string->end());
+		//处理转义
+		for (char ch : root.toString()) {
+			switch (ch) {
+			case '\"':
+				json.insert(json.end(), { '\\','\"' });
+				break;
+			case '\\':
+				json.insert(json.end(), { '\\','\\' });
+				break;
+			case '\b':
+				json.insert(json.end(), { '\\','b' });
+				break;
+			case '\f':
+				json.insert(json.end(), { '\\','f' });
+				break;
+			case '\n':
+				json.insert(json.end(), { '\\','n' });
+				break;
+			case '\r':
+				json.insert(json.end(), { '\\','r' });
+				break;
+			case '\t':
+				json.insert(json.end(), { '\\','t' });
+				break;
+			default:
+				json.push_back(ch);//其他情况不变
+			}
+		}
+		//结尾加上'"'
 		json.push_back('"');
 		break;
 	}
-	case ValueType::Boolean: {
-		if (root._value._bool) {
+	case JsonValueType::Boolean: {
+		if (root.toBoolean()) {
 			json.insert(json.end(), { 't','r','u','e' });
 		}
 		else {
@@ -470,27 +538,26 @@ void JsonParser::parse(const JsonValue& root, std::vector<char>& json) {
 		}
 		break;
 	}
-	case ValueType::Array: {
+	case JsonValueType::Array: {
 		json.push_back('[');
 		bool isFirst = true;
-		for (const auto& v : *root._value._array) {
+		for (const auto& v : root.toArray()) {
 			if (isFirst) {
 				isFirst = false;
 			}
 			else {
 				json.push_back(',');//不是第一次，就加上','分割符
 			}
-			std::vector<char> jsonTmp;
-			parse(v, jsonTmp);
+			std::vector<char> jsonTmp = parse(v);
 			json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
 		}
 		json.push_back(']');
 		break;
 	}
-	case ValueType::Object: {
+	case JsonValueType::Object: {
 		json.push_back('{');
 		bool isFirst = true;
-		for (const auto& kv : *root._value._object) {
+		for (const auto& kv : root.toObject()) {
 			if (isFirst) {
 				isFirst = false;
 			}
@@ -498,14 +565,14 @@ void JsonParser::parse(const JsonValue& root, std::vector<char>& json) {
 				json.push_back(',');//不是第一次，就加上','分割符
 			}
 			//找出key
-			json.push_back('"');
-			json.insert(json.end(), kv.first.begin(), kv.first.end());
-			json.push_back('"');
+			std::vector<char> jsonTmp = parse(kv.first);
+			json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
+
 			//插入分割符
 			json.push_back(':');
+
 			//找出value
-			std::vector<char> jsonTmp;
-			parse(kv.second, jsonTmp);
+			jsonTmp = parse(kv.second);
 			json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
 		}
 		json.push_back('}');
@@ -514,4 +581,5 @@ void JsonParser::parse(const JsonValue& root, std::vector<char>& json) {
 	default:
 		break;
 	}
+	return json;
 }
