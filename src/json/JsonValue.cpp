@@ -1,4 +1,5 @@
 ﻿#include "JsonValue.h"
+#include <algorithm>
 
 JsonValue::JsonValue() {
     setType(JsonValueType::Null);
@@ -127,6 +128,15 @@ std::map<std::string, JsonValue>::const_iterator JsonObject::begin() const {
 
 std::map<std::string, JsonValue>::const_iterator JsonObject::end() const {
     return _object.end();
+}
+
+bool JsonObject::contains(const std::string &key) const {
+    return _object.find(key) != _object.end();
+}
+
+const JsonValue &JsonObject::operator[](const std::string &key) const {
+    auto it = _object.find(key);
+    return (*it).second;
 }
 
 void JsonArray::append(const JsonValue &value) {

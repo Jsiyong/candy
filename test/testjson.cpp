@@ -3,7 +3,16 @@
 //
 #include <iostream>
 #include "../src/json/JsonParser.h"
+#include "../src/json/serialization.h"
 
+struct ABC {
+    int i = 10;
+    std::string s = "123";
+    std::vector<int> j = {2, 3, 1};
+    long long f = 10;
+};
+
+Serialization(ABC, i, s, j, f)
 
 int main() {
 
@@ -25,6 +34,12 @@ int main() {
     jsonStr.push_back('\0');
     std::cout << jsonStr.data() << std::endl;
 
+
+    ABC abc;
+    jsonObj = Serializable<ABC>::serialize(abc);
+    jsonStr = JsonParser::parse(jsonObj);
+    jsonStr.push_back('\0');
+    std::cout << jsonStr.data() << std::endl;
 
     return 0;
 }

@@ -26,6 +26,10 @@ struct JsonObject {
 
     void insert(const std::string &key, const JsonValue &value);
 
+    bool contains(const std::string &key) const;
+
+    const JsonValue &operator[](const std::string &key) const;
+
     std::map<std::string, JsonValue>::const_iterator begin() const;
 
     std::map<std::string, JsonValue>::const_iterator end() const;
