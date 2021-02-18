@@ -57,22 +57,22 @@ JsonValue JsonParser::parse(const std::vector<char> &json) {
                     //字符串
                     state = ParserState::STRING_BEGIN;
                 } else if (ch >= '0' && ch <= '9') {
-                    tokens.emplace_back(TokenType::Number, cur);
+                    tokens.emplace_back(TokenType::Double, cur);
                     p--;//记住，指针要向前移动
                     state = ParserState::NUMBER_BEGIN;
                 } else if (ch == '-') {
                     //解析负数指针不用向前移动
-                    tokens.push_back(JsonToken(TokenType::Number, cur));
+                    tokens.emplace_back(TokenType::Double, cur);
                     state = ParserState::NUMBER_BEGIN;
                 } else if (ch == 'f') {
                     //解析false
-                    tokens.push_back(JsonToken(TokenType::False, cur));
+                    tokens.emplace_back(TokenType::False, cur);
                     state = ParserState::F_IN_FALSE;
                 } else if (ch == 't') {
-                    tokens.push_back(JsonToken(TokenType::True, cur));
+                    tokens.emplace_back(TokenType::True, cur);
                     state = ParserState::T_IN_TRUE;
                 } else if (ch == 'n') {
-                    tokens.push_back(JsonToken(TokenType::Null, cur));
+                    tokens.emplace_back(TokenType::Null, cur);
                     state = ParserState::N_IN_NULL;
                 } else {
                     state = ParserState::ERROR;
@@ -154,7 +154,7 @@ JsonValue JsonParser::parse(const std::vector<char> &json) {
                 break;
             }
             case ParserState::STRING_BEGIN: {
-                tokens.push_back(JsonToken(TokenType::String, cur));//栈顶元素为字符串类型
+                tokens.emplace_back(TokenType::String, cur);//栈顶元素为字符串类型
                 //解析字符串
                 state = ParserState::STRING;
                 break;
@@ -202,6 +202,7 @@ JsonValue JsonParser::parse(const std::vector<char> &json) {
                     //解析小数
                     state = ParserState::NUMBER_AFTER_POINT;//小数点之后的数字
                 } else if (ch == ',' || isSpace(ch) || isEndOfValue(ch)) {
+                    tokens.back().type = TokenType::LongLong;
                     tokens.back().end = cur;
                     p--;//退一格
                     state = ParserState::END;
@@ -273,8 +274,10 @@ JsonValue JsonParser::genJsonValueViaTokens(std::list<JsonToken> &tokens) {
         return JsonValue(true);//当前是布尔型
     } else if (TokenType::False == token.type) {
         return JsonValue(false);//当前是布尔型
-    } else if (TokenType::Number == token.type) {
+    } else if (TokenType::Double == token.type) {
         return JsonValue(std::atof(std::string(token.start, token.end).c_str()));//当前是实数
+    } else if (TokenType::LongLong == token.type) {
+        return JsonValue(std::atoll(std::string(token.start, token.end).c_str()));//当前是实数
     } else if (TokenType::Null == token.type) {
         return JsonValue();
     }
@@ -355,8 +358,13 @@ std::vector<char> JsonParser::parse(const JsonValue &root) {
             json.insert(json.end(), {'n', 'u', 'l', 'l'});
             break;
         }
-        case JsonValueType::Real: {
+        case JsonValueType::Double: {
             std::string str = std::to_string(root.toDouble());
+            json.insert(json.end(), str.begin(), str.end());
+            break;
+        }
+        case JsonValueType::LongLong: {
+            std::string str = std::to_string(root.toLongLong());
             json.insert(json.end(), str.begin(), str.end());
             break;
         }

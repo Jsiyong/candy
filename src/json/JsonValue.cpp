@@ -20,12 +20,18 @@ JsonValueType JsonValue::type() const {
 }
 
 double JsonValue::toDouble() const {
-    if (JsonValueType::Real == _type) {
+    if (JsonValueType::Double == _type) {
         return _value._real;
     }
     return 0.0;
 }
 
+long long JsonValue::toLongLong() const {
+    if (JsonValueType::LongLong == _type) {
+        return _value._number;
+    }
+    return 0;
+}
 
 std::string JsonValue::toString() const {
     if (JsonValueType::String == _type) {
@@ -61,26 +67,20 @@ JsonValue::JsonValue(const std::vector<char>::const_iterator &begin, const std::
 }
 
 JsonValue::~JsonValue() {
-    //switch (_type) {
-    //case JsonValueType::String:
-    //	delete _value._string;
-    //	break;
-    //case JsonValueType::Array:
-    //	delete _value._array;
-    //	break;
-    //case JsonValueType::Object:
-    //	delete _value._object;
-    //	break;
-    //default:
-    //	break;
-    //}
-    //_value._string = NULL;
-}
-
-
-JsonValue::JsonValue(int value) {
-    setType(JsonValueType::Real);
-    _value._real = value;
+    switch (_type) {
+        case JsonValueType::String:
+            delete _value._string;
+            break;
+        case JsonValueType::Array:
+            delete _value._array;
+            break;
+        case JsonValueType::Object:
+            delete _value._object;
+            break;
+        default:
+            break;
+    }
+    _value._string = NULL;
 }
 
 void JsonValue::setType(JsonValueType type) {
@@ -92,8 +92,11 @@ void JsonValue::setType(JsonValueType type) {
     switch (_type) {
         case JsonValueType::Null:
             break;
-        case JsonValueType::Real:
+        case JsonValueType::Double:
             _value._real = 0.0;
+            break;
+        case JsonValueType::LongLong:
+            _value._real = 0;
             break;
         case JsonValueType::String:
             _value._string = new std::string(emptyString);
@@ -144,23 +147,13 @@ JsonValue::JsonValue(bool value) {
     _value._bool = value;
 }
 
-JsonValue::JsonValue(unsigned int value) {
-    setType(JsonValueType::Real);
-    _value._real = value;
-}
-
-JsonValue::JsonValue(uint64_t value) {
-    setType(JsonValueType::Real);
-    _value._real = static_cast<uint64_t>(value);
-}
-
-JsonValue::JsonValue(int64_t value) {
-    setType(JsonValueType::Real);
-    _value._real = static_cast<int64_t>(value);
+JsonValue::JsonValue(long long value) {
+    setType(JsonValueType::LongLong);
+    _value._number = value;
 }
 
 JsonValue::JsonValue(double value) {
-    setType(JsonValueType::Real);
+    setType(JsonValueType::Double);
     _value._real = value;
 }
 
@@ -172,4 +165,48 @@ JsonValue::JsonValue(const std::vector<char> &value) {
 JsonValue::JsonValue(const JsonObject &value) {
     setType(JsonValueType::Object);
     *_value._object = value;
+}
+
+JsonValue::JsonValue(const JsonValue &other) {
+    //负责other的内容到this中
+    _type = other.type();
+    switch (_type) {
+        case JsonValueType::Null:
+        case JsonValueType::Double:
+        case JsonValueType::LongLong:
+        case JsonValueType::Boolean:
+            _value = other._value;
+            break;
+        case JsonValueType::String:
+            _value._string = new std::string(*other._value._string);
+            break;
+        case JsonValueType::Array:
+            _value._array = new JsonArray(*other._value._array);
+            break;
+        case JsonValueType::Object:
+            _value._object = new JsonObject(*other._value._object);
+            break;
+        default:
+            break;
+    }
+}
+
+JsonValue::JsonValue(JsonValue &&other) noexcept {
+    swap(other);
+}
+
+void JsonValue::swap(JsonValue &other) {
+    //交换类型和值
+    std::swap(_value, other._value);
+    std::swap(_type, other._type);
+}
+
+JsonValue &JsonValue::operator=(const JsonValue &other) {
+    JsonValue(other).swap(*this);
+    return *this;
+}
+
+JsonValue &JsonValue::operator=(JsonValue &&other) noexcept {
+    other.swap(*this);
+    return *this;
 }

@@ -11,7 +11,8 @@ struct JsonValue;
 
 enum class JsonValueType {
     Null = 0,
-    Real,//实数一个类型就够了，其他类型都能转成实数类型
+    LongLong,//整型[64位的]
+    Double,//实数
     String,
     Boolean,
     Array,
@@ -59,15 +60,9 @@ struct JsonValue {
 
     JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end);
 
-    JsonValue(int value);
+    JsonValue(long long value);
 
     JsonValue(bool value);
-
-    JsonValue(unsigned int value);
-
-    JsonValue(uint64_t value);
-
-    JsonValue(int64_t value);
 
     JsonValue(double value);
 
@@ -81,6 +76,8 @@ struct JsonValue {
 
     double toDouble() const;
 
+    long long toLongLong() const;
+
     std::string toString() const;
 
     bool toBoolean() const;
@@ -89,17 +86,24 @@ struct JsonValue {
 
     JsonObject toObject() const;
 
-#if 0
     //赋值
-    JsonValue(const JsonValue& other);
-    JsonValue(JsonValue&& other) noexcept;
-    JsonValue& operator=(const JsonValue& other);
-    JsonValue& operator=(JsonValue&& other) noexcept;
-#endif
+    JsonValue(const JsonValue &other);
+
+    JsonValue(JsonValue &&other) noexcept;
+
+    JsonValue &operator=(const JsonValue &other);
+
+    JsonValue &operator=(JsonValue &&other) noexcept;
 
     ~JsonValue();
 
 private:
+
+    /**
+     * 交换指针内容
+     * @param other
+     */
+    void swap(JsonValue &other);
 
     void setType(JsonValueType type);
 
@@ -108,6 +112,7 @@ private:
     //保存值
     union ValueHolder {
         double _real;
+        long long _number;
         bool _bool;
         std::string *_string;//字符串
         JsonObject *_object;//对象

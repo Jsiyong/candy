@@ -15,7 +15,8 @@ enum class TokenType {
     MemberSeparator,//成员分割符，也就是','
 
     String,//字符串
-    Number,//数字
+    Double,//实数
+    LongLong,//整型
     True,
     False,
     Null//空值
