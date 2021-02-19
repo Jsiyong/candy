@@ -12,8 +12,9 @@
  * socket处理器的状态机
  */
 enum class ProcessorStatus {
-    READ,//读状态
-    WRITE//写数据状态
+    READ_REQUEST,//读请求状态
+    DO_SERVICE,//处理服务的状态
+    WRITE_RESPONSE//写回复数据状态
 };
 
 /**
