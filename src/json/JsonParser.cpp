@@ -3,7 +3,7 @@
 enum class ParserState {
     BEGIN = 0,//开始解析
 
-    OBJECT_OR_ARRAY_BEGIN,//如果是数组或者字符串
+    OBJECT_OR_ARRAY_BEGIN,//如果是数组或者对象
 
     STRING_BEGIN,//字符串开始
     STRING,//解析字符串过程中
@@ -284,7 +284,6 @@ JsonValue JsonParser::genJsonValueViaTokens(std::list<JsonToken> &tokens) {
     return JsonValue();
 }
 
-//因为栈的关系，导致列表的顺序是反的，所以需要倒过来
 JsonValue JsonParser::genJsonArrayViaTokens(std::list<JsonToken> &tokens) {
     JsonArray jsonArray;
     //找到第一个']'然后不停出队
