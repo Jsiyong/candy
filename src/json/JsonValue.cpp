@@ -1,4 +1,4 @@
-﻿#include "JsonValue.h"
+﻿#include "jsonvalue.h"
 #include <algorithm>
 
 JsonValue::JsonValue() {
@@ -10,14 +10,40 @@ JsonValue::JsonValue(const std::string &str) {
     _value._string->assign(str);
 }
 
+JsonValue::JsonValue(const char *value) : JsonValue(std::string(value)) {}
 
 JsonValue::JsonValue(const JsonArray &value) {
     setType(JsonValueType::Array);
     *_value._array = value;
 }
 
-JsonValueType JsonValue::type() const {
-    return _type;
+JsonValue::JsonValue(bool value) {
+    setType(JsonValueType::Boolean);
+    _value._bool = value;
+}
+
+JsonValue::JsonValue(long long value) {
+    setType(JsonValueType::LongLong);
+    _value._number = value;
+}
+
+JsonValue::JsonValue(double value) {
+    setType(JsonValueType::Double);
+    _value._real = value;
+}
+
+JsonValue::JsonValue(const std::vector<char> &value) : JsonValue(value.begin(), value.end()) {}
+
+JsonValue::JsonValue(const JsonObject &value) {
+    setType(JsonValueType::Object);
+    *_value._object = value;
+}
+
+JsonValue::JsonValue(int value) : JsonValue((long long) value) {}
+
+JsonValue::JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end) {
+    setType(JsonValueType::String);
+    _value._string->assign(begin, end);
 }
 
 double JsonValue::toDouble() const {
@@ -41,6 +67,10 @@ std::string JsonValue::toString() const {
     return std::string();
 }
 
+JsonValueType JsonValue::type() const {
+    return _type;
+}
+
 bool JsonValue::toBoolean() const {
     if (JsonValueType::Boolean == _type) {
         return _value._bool;
@@ -60,11 +90,6 @@ JsonObject JsonValue::toObject() const {
         return *_value._object;
     }
     return JsonObject();
-}
-
-JsonValue::JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end) {
-    setType(JsonValueType::String);
-    _value._string->assign(begin, end);
 }
 
 JsonValue::~JsonValue() {
@@ -143,38 +168,12 @@ void JsonArray::append(const JsonValue &value) {
     _array.push_back(value);
 }
 
-
 std::list<JsonValue>::const_iterator JsonArray::begin() const {
     return _array.begin();
 }
 
 std::list<JsonValue>::const_iterator JsonArray::end() const {
     return _array.end();
-}
-
-JsonValue::JsonValue(bool value) {
-    setType(JsonValueType::Boolean);
-    _value._bool = value;
-}
-
-JsonValue::JsonValue(long long value) {
-    setType(JsonValueType::LongLong);
-    _value._number = value;
-}
-
-JsonValue::JsonValue(double value) {
-    setType(JsonValueType::Double);
-    _value._real = value;
-}
-
-JsonValue::JsonValue(const std::vector<char> &value) {
-    setType(JsonValueType::String);
-    _value._string->assign(value.begin(), value.end());
-}
-
-JsonValue::JsonValue(const JsonObject &value) {
-    setType(JsonValueType::Object);
-    *_value._object = value;
 }
 
 JsonValue::JsonValue(const JsonValue &other) {

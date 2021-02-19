@@ -5,11 +5,12 @@
 #ifndef CANDY_SERIALIZATION_H
 #define CANDY_SERIALIZATION_H
 
-#include "JsonParser.h"
+#include "jsonparser.h"
 #include <sstream>
+#include <string.h>
 
-#define ARG_EXPAND(...) __VA_ARGS__
-#define ARG_1(arg)       std::make_pair(std::string(#arg),&t.arg)
+#define ARG_EXPAND(...)  __VA_ARGS__
+#define ARG_1(arg, ...)  std::make_pair(std::string(#arg),&t.arg)
 #define ARG_2(arg, ...)  std::make_pair(std::string(#arg),&t.arg),ARG_EXPAND(ARG_1(__VA_ARGS__))
 #define ARG_3(arg, ...)  std::make_pair(std::string(#arg),&t.arg),ARG_EXPAND(ARG_2(__VA_ARGS__))
 #define ARG_4(arg, ...)  std::make_pair(std::string(#arg),&t.arg),ARG_EXPAND(ARG_3(__VA_ARGS__))
@@ -118,7 +119,7 @@ struct Serializable {
      * 序列化一个对象
      * @return
      */
-    static JsonObject serialize(const T &t) { return JsonObject(); }
+    static JsonValue serialize(const T &t) { return JsonValue(); }
 
     /**
      * 反序列化为对象
@@ -256,11 +257,15 @@ public:
 
 public:
 
-    static JsonValue genJsonValue(const bool &value) {
+    static JsonValue genJsonValue(bool value) {
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(const long long &value) {
+    static JsonValue genJsonValue(long long value) {
+        return JsonValue(value);
+    }
+
+    static JsonValue genJsonValue(int value) {
         return JsonValue(value);
     }
 
@@ -268,11 +273,7 @@ public:
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(const char *value) {
-        return JsonValue(value);
-    }
-
-    static JsonValue genJsonValue(const double &value) {
+    static JsonValue genJsonValue(double value) {
         return JsonValue(value);
     }
 

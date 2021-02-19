@@ -62,9 +62,13 @@ struct JsonValue {
 
     JsonValue(const std::string &value);
 
+    JsonValue(const char *value);
+
     JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end);
 
     JsonValue(long long value);
+
+    JsonValue(int value);
 
     JsonValue(bool value);
 
@@ -114,7 +118,7 @@ private:
     JsonValueType _type;
 
     //保存值
-    union ValueHolder {
+    union {
         double _real;
         long long _number;
         bool _bool;
