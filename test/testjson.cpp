@@ -16,16 +16,15 @@ struct CFF {
 Serialization(CFF, d)
 
 struct ABC {
-//    int i;
-//    std::string s;
+    int i;
+    std::string s;
     std::map<int, CFF> m;
     std::vector<int> j;
-//    long long f;
-//    CFF aaa;
+    long long f;
+    CFF aaa;
 };
 
-Serialization(ABC, j, m)
-//Serialization(ABC, i, s, j, f, m, aaa)
+Serialization(ABC, i, s, j, f, m, aaa)
 
 int main() {
     std::vector<char> jsonStr;
@@ -51,12 +50,12 @@ int main() {
 
     ABC abc;
     abc.j = {1, 2, 3, 4};
-//    abc.i = 100;
+    abc.i = 100;
     abc.m[1] = CFF(9.99);
     abc.m[10] = CFF(20);
-//    abc.aaa.d = 9.99;
-//    abc.f = 99991111;
-//    abc.s = "hello-world";
+    abc.aaa.d = 9.99;
+    abc.f = 99991111;
+    abc.s = "hello-world";
 
 
     jsonObj = Serializable<ABC>::serialize(abc);

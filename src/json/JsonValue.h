@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <map>
-#include <list>
 #include <vector>
 #include <string>
 
@@ -45,12 +44,14 @@ struct JsonArray {
 
     void append(const JsonValue &value);
 
-    std::list<JsonValue>::const_iterator begin() const;
+    const JsonValue &operator[](size_t index) const;
 
-    std::list<JsonValue>::const_iterator end() const;
+    std::vector<JsonValue>::const_iterator begin() const;
+
+    std::vector<JsonValue>::const_iterator end() const;
 
 private:
-    std::list<JsonValue> _array;//数组
+    std::vector<JsonValue> _array;//数组
 };
 
 /**

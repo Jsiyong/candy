@@ -92,23 +92,6 @@ JsonObject JsonValue::toObject() const {
     return JsonObject();
 }
 
-JsonValue::~JsonValue() {
-    switch (_type) {
-        case JsonValueType::String:
-            delete _value._string;
-            break;
-        case JsonValueType::Array:
-            delete _value._array;
-            break;
-        case JsonValueType::Object:
-            delete _value._object;
-            break;
-        default:
-            break;
-    }
-    _value._string = NULL;
-}
-
 void JsonValue::setType(JsonValueType type) {
     //初始化
     _type = type;
@@ -142,9 +125,8 @@ void JsonValue::setType(JsonValueType type) {
 }
 
 void JsonObject::insert(const std::string &key, const JsonValue &value) {
-    _object.insert(std::make_pair(key, value));
+    _object.emplace(key, value);
 }
-
 
 std::map<std::string, JsonValue>::const_iterator JsonObject::begin() const {
     return _object.begin();
@@ -168,12 +150,16 @@ void JsonArray::append(const JsonValue &value) {
     _array.push_back(value);
 }
 
-std::list<JsonValue>::const_iterator JsonArray::begin() const {
+std::vector<JsonValue>::const_iterator JsonArray::begin() const {
     return _array.begin();
 }
 
-std::list<JsonValue>::const_iterator JsonArray::end() const {
+std::vector<JsonValue>::const_iterator JsonArray::end() const {
     return _array.end();
+}
+
+const JsonValue &JsonArray::operator[](size_t index) const {
+    return _array[index];
 }
 
 JsonValue::JsonValue(const JsonValue &other) {
@@ -218,4 +204,21 @@ JsonValue &JsonValue::operator=(const JsonValue &other) {
 JsonValue &JsonValue::operator=(JsonValue &&other) noexcept {
     other.swap(*this);
     return *this;
+}
+
+JsonValue::~JsonValue() {
+    switch (_type) {
+        case JsonValueType::String:
+            delete _value._string;
+            break;
+        case JsonValueType::Array:
+            delete _value._array;
+            break;
+        case JsonValueType::Object:
+            delete _value._object;
+            break;
+        default:
+            break;
+    }
+    _value._number = 0;
 }
