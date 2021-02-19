@@ -98,11 +98,7 @@ struct JsonValue {
     //赋值
     JsonValue(const JsonValue &other);
 
-    JsonValue(JsonValue &&other) noexcept;
-
     JsonValue &operator=(const JsonValue &other);
-
-    JsonValue &operator=(JsonValue &&other) noexcept;
 
     ~JsonValue();
 

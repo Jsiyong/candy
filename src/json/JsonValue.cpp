@@ -186,10 +186,6 @@ JsonValue::JsonValue(const JsonValue &other) {
     }
 }
 
-JsonValue::JsonValue(JsonValue &&other) noexcept {
-    swap(other);
-}
-
 void JsonValue::swap(JsonValue &other) {
     //交换类型和值
     std::swap(_value, other._value);
@@ -198,11 +194,6 @@ void JsonValue::swap(JsonValue &other) {
 
 JsonValue &JsonValue::operator=(const JsonValue &other) {
     JsonValue(other).swap(*this);
-    return *this;
-}
-
-JsonValue &JsonValue::operator=(JsonValue &&other) noexcept {
-    other.swap(*this);
     return *this;
 }
 
