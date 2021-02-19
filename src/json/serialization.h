@@ -132,163 +132,161 @@ struct Serializable {
 class JsonHelper {
 private:
     template<typename Tuple, size_t N>
-    struct DataGetter {
-        static void genJsonObject(const Tuple &fieldTuple, JsonObject &jsonObject) {
-            DataGetter<Tuple, N - 1>::genJsonObject(fieldTuple, jsonObject);
+    struct JsonObjectParser {
+        /**
+         * 转换为json对象
+         * @param fieldTuple
+         * @param jsonObject
+         */
+        static void toJsonObject(const Tuple &fieldTuple, JsonObject &jsonObject) {
+            JsonObjectParser<Tuple, N - 1>::toJsonObject(fieldTuple, jsonObject);
             auto data = std::get<N - 1>(fieldTuple);
             std::string key = data.first;
             auto value = *data.second;
             jsonObject.insert(key, toJsonValue(value));
         }
+
+        /**
+         * 从json对象中转换回来
+         * @param fieldTuple
+         * @param jsonObject
+         */
+        static void fromJsonObject(const Tuple &fieldTuple, const JsonObject &jsonObject) {
+            JsonObjectParser<Tuple, N - 1>::fromJsonObject(fieldTuple, jsonObject);
+            auto data = std::get<N - 1>(fieldTuple);
+            std::string key = data.first;
+            if (jsonObject.contains(key)) {
+                fromJsonValue(data.second, jsonObject[key]);
+            }
+        }
     };
 
     template<typename Tuple>
-    struct DataGetter<Tuple, 1> {
-        static void genJsonObject(const Tuple &fieldTuple, JsonObject &jsonObject) {
+    struct JsonObjectParser<Tuple, 1> {
+        static void toJsonObject(const Tuple &fieldTuple, JsonObject &jsonObject) {
             auto data = std::get<0>(fieldTuple);
             std::string key = data.first;
             auto value = *data.second;
             jsonObject.insert(key, toJsonValue(value));
         }
-    };
 
-    template<typename Tuple, size_t N>
-    struct DataSetter {
-        static void getValueFromJsonObject(const Tuple &fieldTuple, const JsonObject &jsonObject) {
-            DataSetter<Tuple, N - 1>::getValueFromJsonObject(fieldTuple, jsonObject);
-            auto data = std::get<N - 1>(fieldTuple);
-            std::string key = data.first;
-            if (jsonObject.contains(key)) {
-                setValueByJson(data.second, jsonObject[key]);
-            }
-        }
-    };
-
-    template<typename Tuple>
-    struct DataSetter<Tuple, 1> {
-        static void getValueFromJsonObject(const Tuple &fieldTuple, const JsonObject &jsonObject) {
+        static void fromJsonObject(const Tuple &fieldTuple, const JsonObject &jsonObject) {
             auto data = std::get<0>(fieldTuple);
             std::string key = data.first;
             if (jsonObject.contains(key)) {
-                setValueByJson(data.second, jsonObject[key]);
+                fromJsonValue(data.second, jsonObject[key]);
             }
         }
     };
 
 public:
-    static void setValue(int *field, const JsonValue &jsonValue) {
-        *field = (int) jsonValue.toLongLong();
-    }
-
-    static void setValue(std::string *field, const JsonValue &jsonValue) {
-        *field = jsonValue.toString();
-    }
-
-    static void setValue(bool *field, const JsonValue &jsonValue) {
-        *field = jsonValue.toBoolean();
-    }
-
-    static void setValue(long long *field, const JsonValue &jsonValue) {
-        *field = jsonValue.toLongLong();
-    }
-
-    static void setValue(double *field, const JsonValue &jsonValue) {
-        *field = jsonValue.toDouble();
-    }
-
+    ////工具
     template<typename T>
-    static void setValue(T *field, const JsonValue &jsonValue) {
-        *field = Serializable<T>::deserialize(jsonValue.toObject());
-    }
-
-public:
-
-    template<typename T>
-    static void convertValueFromString(const std::string &str, T &v) {
+    static void convertFromString(const std::string &str, T &v) {
         std::stringstream ss;
         ss << str;
         ss >> v;
     }
 
-    static void convertValueFromString(const std::string &str, std::string &v) { v = str; }
+    static void convertFromString(const std::string &str, std::string &v) { v = str; }
 
     template<typename T>
-    static void convertValueToString(const T &v, std::string &str) {
+    static void convertToString(const T &v, std::string &str) {
         std::stringstream ss;
         ss << v;
         ss >> str;
     }
 
-    static void convertValueToString(const std::string &v, std::string &str) { str = v; }
+    static void convertToString(const std::string &v, std::string &str) { str = v; }
 
-    template<typename T>
-    static void setValueByJson(T *field, const JsonValue &jsonValue) {
-        setValue(field, jsonValue);
+public:
+
+    //从jsonValue中转换过来
+    ////单值
+    static void fromJsonValue(int *field, const JsonValue &jsonValue) {
+        *field = (int) jsonValue.toLongLong();
+    }
+
+    static void fromJsonValue(std::string *field, const JsonValue &jsonValue) {
+        *field = jsonValue.toString();
+    }
+
+    static void fromJsonValue(bool *field, const JsonValue &jsonValue) {
+        *field = jsonValue.toBoolean();
+    }
+
+    static void fromJsonValue(long long *field, const JsonValue &jsonValue) {
+        *field = jsonValue.toLongLong();
+    }
+
+    static void fromJsonValue(double *field, const JsonValue &jsonValue) {
+        *field = jsonValue.toDouble();
     }
 
     template<typename T>
-    static void setValueByJson(std::vector<T> *field, const JsonValue &jsonValue) {
+    static void fromJsonValue(T *field, const JsonValue &jsonValue) {
+        *field = Serializable<T>::deserialize(jsonValue.toObject());
+    }
+
+    ////泛型值
+    template<typename T>
+    static void fromJsonValue(std::vector<T> *field, const JsonValue &jsonValue) {
         for (const auto &v:jsonValue.toArray()) {
             T t;
-            setValueByJson(&t, v);
+            fromJsonValue(&t, v);
             field->push_back(t);
         }
     }
 
     template<typename T>
-    static void setValueByJson(std::list<T> *field, const JsonValue &jsonValue) {
+    static void fromJsonValue(std::list<T> *field, const JsonValue &jsonValue) {
         for (const auto &v:jsonValue.toArray()) {
             T t;
-            setValueByJson(&t, v);
+            fromJsonValue(&t, v);
             field->push_back(t);
         }
     }
 
     template<typename K, typename V>
-    static void setValueByJson(std::map<K, V> *field, const JsonValue &jsonValue) {
+    static void fromJsonValue(std::map<K, V> *field, const JsonValue &jsonValue) {
         for (const auto &kv : jsonValue.toObject()) {
             K k;
-            convertValueFromString(kv.first, k);
+            convertFromString(kv.first, k);
             V v;
-            setValueByJson(&v, kv.second);
+            fromJsonValue(&v, kv.second);
             field->insert(std::make_pair(k, v));
         }
     }
 
 public:
-
-    static JsonValue genJsonValue(bool value) {
+    //转换为JsonValue
+    ////单值
+    static JsonValue toJsonValue(bool value) {
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(long long value) {
+    static JsonValue toJsonValue(long long value) {
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(int value) {
+    static JsonValue toJsonValue(int value) {
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(const std::string &value) {
+    static JsonValue toJsonValue(const std::string &value) {
         return JsonValue(value);
     }
 
-    static JsonValue genJsonValue(double value) {
+    static JsonValue toJsonValue(double value) {
         return JsonValue(value);
     }
-
-    template<typename T>
-    static JsonValue genJsonValue(const T &value) {
-        return Serializable<T>::serialize(value);
-    }
-
-public:
 
     template<typename T>
     static JsonValue toJsonValue(const T &value) {
-        return genJsonValue(value);
+        return Serializable<T>::serialize(value);
     }
 
+    ////范型值
     template<typename T>
     static JsonValue toJsonValue(const std::list<T> &values) {
         JsonArray jsonArray;
@@ -312,7 +310,7 @@ public:
         JsonObject jsonObject;
         for (const auto &kv : values) {
             std::string key;
-            convertValueToString(kv.first, key);//key需要转为字符串
+            convertToString(kv.first, key);//key需要转为字符串
             jsonObject.insert(key, toJsonValue(kv.second));
         }
         return jsonObject;
@@ -322,13 +320,13 @@ public:
     template<typename... Args>
     static JsonObject serialize(const std::tuple<Args...> &fieldTuple) {
         JsonObject jsonObject;
-        DataGetter<decltype(fieldTuple), sizeof...(Args)>::genJsonObject(fieldTuple, jsonObject);
+        JsonObjectParser<decltype(fieldTuple), sizeof...(Args)>::toJsonObject(fieldTuple, jsonObject);
         return jsonObject;
     }
 
     template<typename... Args>
     static void deserialize(const std::tuple<Args...> &fieldTuple, const JsonObject &jsonObject) {
-        DataSetter<decltype(fieldTuple), sizeof...(Args)>::getValueFromJsonObject(fieldTuple, jsonObject);
+        JsonObjectParser<decltype(fieldTuple), sizeof...(Args)>::fromJsonObject(fieldTuple, jsonObject);
     }
 };
 
