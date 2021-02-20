@@ -15,25 +15,6 @@ void SocketProcessor::run() {
 
             //协议解析
             _request->tryDecode(_channel->getReadBuff());
-#if 0
-            info("[method]%s", pRequest->getMethod());
-            info("[url]%s", pRequest->getUrl());
-            info("[request params]");
-            for (auto &p : pRequest->getRequestParams()) {
-                trace("++ key: %s", p.first);
-                trace("-- value: %s", p.second);
-            }
-
-            info("[protocol]%s", pRequest->getProtocol());
-            info("[version]%s", pRequest->getVersion());
-            info("[request headers]");
-            for (auto &h : pRequest->getHeaders()) {
-                trace("++ key: %s", h.first);
-                trace("-- value: %s", h.second);
-            }
-            info("[body]%s", pRequest->getBody());
-#endif
-            warn("[body size]%lld", _request->getBody().size());
 
             //解析http完成之后，下一步就是回复客户端
             if (_request->getDecodeState() == HttpRequestDecodeState::COMPLETE) {
@@ -51,8 +32,9 @@ void SocketProcessor::run() {
         }
         case ProcessorStatus::DO_SERVICE: {
             //开始做业务
-            //TODO 做业务
-            
+            //做业务
+            _servlet->service(_request, _response);
+
             //做完业务就开始写数据
             _status = ProcessorStatus::WRITE_RESPONSE;
             //注意，不要break，因为做完业务之后就开始写数据了，状态直接就是ProcessorStatus::WRITE_RESPONSE
@@ -77,9 +59,11 @@ void SocketProcessor::run() {
 }
 
 SocketProcessor::SocketProcessor(int fd) {
-    _channel = new Channel(fd);
+    _channel = new SocketChannel(fd);
     _request = new HttpRequest();
     _response = new HttpResponse();
+
+    _servlet = new DispatcherServlet();
 }
 
 SocketProcessor::~SocketProcessor() {
@@ -88,7 +72,7 @@ SocketProcessor::~SocketProcessor() {
     delete _response;
 }
 
-Channel *SocketProcessor::getChannel() const {
+SocketChannel *SocketProcessor::getChannel() const {
     return _channel;
 }
 

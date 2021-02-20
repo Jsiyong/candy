@@ -6,7 +6,7 @@
 #include "conf/servconf.h"
 #include "startup/cmdparser.h"
 #include "log/logger.h"
-#include "core/server.h"
+#include "connector/server.h"
 
 static Logger *pLogger = NULL;
 static LogAppender *pLogAppender = NULL;

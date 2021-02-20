@@ -46,7 +46,7 @@ private:
      */
     void removeEvent(int fd);
 
-    void removeChannelInternal(Channel *channel);
+    void removeChannelInternal(SocketChannel *channel);
 
     /**
      * 开始执行事件循环

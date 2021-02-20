@@ -7,6 +7,8 @@
 
 #include "channel.h"
 #include "../util/threadpool.h"
+#include "../protocol/http/httprequest.h"
+#include "../container/servlet.h"
 
 /**
  * socket处理器的状态机
@@ -33,7 +35,7 @@ struct SocketProcessor : Runnable {
      */
     void run() override;
 
-    Channel *getChannel() const;
+    SocketChannel *getChannel() const;
 
     void setOnAfterReadCompletedRequest(const std::function<void(void)> &afterReadCompletedRequest);
 
@@ -45,10 +47,12 @@ struct SocketProcessor : Runnable {
 
 private:
 
-    ProcessorStatus _status = ProcessorStatus::READ;//当前处理的状态
-    Channel *_channel = NULL;
+    ProcessorStatus _status = ProcessorStatus::READ_REQUEST;//当前处理的状态
+    SocketChannel *_channel = NULL;
     HttpRequest *_request = NULL;//http请求对象
     HttpResponse *_response = NULL;//响应对象
+
+    Servlet *_servlet = NULL;//用户应用
 
     //回调函数
     std::function<void(void)> _afterReadCompletedRequest;//在读到完整请求之后

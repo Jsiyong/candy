@@ -74,7 +74,9 @@ void *Poller::execEventLoop(void *param) {
                 pPoller->_executor->submit(pSocketProcessor);
             }
             if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
-                close(pSocketProcessor->getChannel()->fd());
+                int clifd = pSocketProcessor->getChannel()->fd();
+                pPoller->removeEvent(clifd);
+                close(clifd);
             }
         }
     }
@@ -86,7 +88,7 @@ Poller::~Poller() {
     pthread_mutex_destroy(&_mutex);
 }
 
-void Poller::removeChannelInternal(Channel *channel) {
+void Poller::removeChannelInternal(SocketChannel *channel) {
 #if 0
     //从epoll树上删除
     int clifd = channel->fd();
