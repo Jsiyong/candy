@@ -6,6 +6,7 @@
 #define CANDY_SERVLET_H
 
 #include "../protocol/http/httprequest.h"
+#include "../protocol/http/httpresponse.h"
 
 /**
  * 用户应用的基类

@@ -10,11 +10,11 @@ void SocketProcessor::run() {
     switch (_status) {
         case ProcessorStatus::READ_REQUEST: {
             //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
-            //客户端的读事件产生
-            _channel->read();
+            //客户端的读事件产生，读到request中
+            _channel->read(*_request, -1);
 
             //协议解析
-            _request->tryDecode(_channel->getReadBuff());
+            _request->tryDecode();
 
             //解析http完成之后，下一步就是回复客户端
             if (_request->getDecodeState() == HttpRequestDecodeState::COMPLETE) {
@@ -42,8 +42,8 @@ void SocketProcessor::run() {
         case ProcessorStatus::WRITE_RESPONSE: {
             //如果是可写事件触发
             trace("start write...");
-            _channel->write();
-            if (_channel->finishWrite()) {
+            _channel->write(*_response, 0);
+            if (!_channel->close()) {
                 _status = ProcessorStatus::READ_REQUEST;
                 if (_afterWriteCompletedResponse) {
                     _afterWriteCompletedResponse();

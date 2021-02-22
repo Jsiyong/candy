@@ -4,27 +4,19 @@
 
 #include <iostream>
 #include "servlet.h"
+#include "../container/controller.h"
 #include "../log/logger.h"
 
 void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
-
-    info("[method]%s", request->getMethod());
-    info("[url]%s", request->getUrl());
-    info("[request params]");
-    for (auto &p : request->getRequestParams()) {
-        trace("++ key: %s", p.first);
-        trace("-- value: %s", p.second);
-    }
-
-    info("[protocol]%s", request->getProtocol());
-    info("[version]%s", request->getVersion());
-    info("[request headers]");
-    for (auto &h : request->getHeaders()) {
-        trace("++ key: %s", h.first);
-        trace("-- value: %s", h.second);
-    }
-    info("[body]%s", request->getBody());
-    warn("[body size]%lld", request->getBody().size());
+    trace("[method]%s", request->getMethod());
+    trace("[url]%s", request->getUrl());
 
     //根据路径获取对应的处理方法
+    const std::string &url = request->getUrl();
+    //根据请求路径获取业务处理方法的指针对象
+    auto event = EventDispatcher::getInstance()->getHandlerByPath(url);
+    if (event) {
+        //调用业务处理方法
+        event(request, response);
+    }
 }

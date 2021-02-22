@@ -73,23 +73,16 @@ enum HttpMethod {
 };
 
 /**
- * http协议的基类
- */
-struct HttpBase {
-
-};
-
-/**
  * http的请求类
  */
-struct HttpRequest : public HttpBase {
+struct HttpRequest {
 
     /**
      * 解析http协议
      * @param buf
      * @return
      */
-    void tryDecode(std::vector<char> &buf);
+    void tryDecode();
 
     const std::string &getMethod() const;
 
@@ -106,6 +99,8 @@ struct HttpRequest : public HttpBase {
     const std::vector<char> &getBody() const;
 
     HttpRequestDecodeState getDecodeState() const;
+
+    operator std::vector<char> &();
 
 private:
 
@@ -140,13 +135,8 @@ private:
     size_t _contentLength = 0;//body的长度
 
     HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
-};
 
-/**
- * Http的响应
- */
-struct HttpResponse : public HttpBase {
-
+    std::vector<char> _buf;//请求的数据
 };
 
 #endif //CANDY_HTTPREQUEST_H

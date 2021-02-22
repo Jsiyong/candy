@@ -53,15 +53,15 @@ response
 //首先解析请求行
 //接着解析请求头
 //最后解析请求体
-void HttpRequest::tryDecode(std::vector<char> &buf) {
-    if (buf.empty()) {
+void HttpRequest::tryDecode() {
+    if (_buf.empty()) {
         return;
     }
     if (_decodeState == HttpRequestDecodeState::COMPLETE) {
         //如果解析完成，则再解析一遍
         this->clear();
     }
-    this->parseInternal(buf.data() + _nextPos, buf.size());
+    this->parseInternal(_buf.data() + _nextPos, _buf.size());
 #if 0
     //如果是长连接，可能会出现上一个请求解析完了，下面会解析下一个请求，所以清空之前解析玩的数据
     buf.assign(buf.begin() + _nextPos, buf.end());
@@ -390,4 +390,8 @@ void HttpRequest::clear() {
 
 HttpRequestDecodeState HttpRequest::getDecodeState() const {
     return _decodeState;
+}
+
+HttpRequest::operator std::vector<char> &() {
+    return _buf;
 }

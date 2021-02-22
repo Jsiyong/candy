@@ -9,6 +9,7 @@
 #include "../util/threadpool.h"
 #include "../protocol/http/httprequest.h"
 #include "../container/servlet.h"
+#include "../protocol/http/httpresponse.h"
 
 /**
  * socket处理器的状态机

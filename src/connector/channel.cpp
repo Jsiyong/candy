@@ -21,12 +21,10 @@ int SocketChannel::fd() const {
 
 SocketChannel::SocketChannel(int fd) : _fd(fd) {
 
-    //ip地址
-
     //设置ip地址和端口
-    struct sockaddr_in raddr;
+    struct sockaddr_in raddr{};
     socklen_t socklen = sizeof(raddr);
-    memset(&raddr, 0, socklen);
+    //获取地址
     getpeername(_fd, (struct sockaddr *) &raddr, &socklen);
     char iptmp[IP_SIZE];
     inet_ntop(AF_INET, &raddr.sin_addr, iptmp, socklen);
@@ -35,47 +33,48 @@ SocketChannel::SocketChannel(int fd) : _fd(fd) {
 }
 
 SocketChannel::~SocketChannel() {
-    close(_fd);
+    _close = true;
+//    close(_fd);
 }
 
-void SocketChannel::read() {
+long long SocketChannel::read(std::vector<char> &dsts, long long offset) {
+    if (offset > dsts.size()) {
+        error("offset error! dists size: %d, offset: %d", dsts.size(), offset);
+        return 0;
+    }
+    //计算开始位置
+    std::vector<char>::const_iterator begin = -1 == offset ? dsts.end() : dsts.begin() + offset;
 
     char buf[MAX_BUFF_SIZE];
+    long long allReadSize = 0;//读到的所有字节数
     while (true) {
 
-        int size = ::read(_fd, buf, MAX_BUFF_SIZE);
-        if (0 > size) {
+        int readSize = ::read(_fd, buf, MAX_BUFF_SIZE);
+        if (0 > readSize) {
             //假错
             if (errno == EINTR) {
                 //被信号打断
                 continue;
             }
-            //读完了
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                error("read complete");
-//                close(_fd);
-                //通道的状态变为关闭
-//                _state = State::CLOSE;
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                //真的读错了
+                _close = true;
+                break;
             }
-            break;
-        } else if (0 == size) {
-            error("client disconnect.");
-//            info("recv all data:%s", _readBuff.data());
-
+        } else if (0 == readSize) {
+            _close = true;
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
 //            close(_fd);
             //通道的状态变为关闭
-
             break;
         } else {
-            _readBuff.insert(_readBuff.end(), buf, buf + size);
-//            trace("recv size[%d],buff size[%d]", size, _readBuff.size());
+            dsts.insert(begin, buf, buf + readSize);
+
+            allReadSize += readSize;//添加到总数去
+            begin += readSize;//读取的开始位置也发生偏移
         }
     }
-}
-
-short SocketChannel::getState() const {
-    return _state;
+    return allReadSize;
 }
 
 std::string SocketChannel::getHost() const {
@@ -86,41 +85,38 @@ int SocketChannel::getPort() const {
     return _port;
 }
 
-void SocketChannel::write() {
+long long SocketChannel::write(const std::vector<char> &srcs, long long offset) {
+    //读指针的偏移大小不能大于数组的大小
+    if (offset > srcs.size()) {
+        error("offset error! srcs size: %d, offset: %d", srcs.size(), offset);
+        return 0;
+    }
 
-    char resp[MAX_BUFF_SIZE] = {0};
-    char *p = resp;
-    const char *header = "HTTP/1.1 200 OK\r\n";
-    const char *linefmt = "Content-Type:%s\r\nContent-Length:%d\r\n";
-    //body
-    const char *body = "{\"title\":\"hello\",\"body\":\"world\"}";
-    char line[MAX_BUFF_SIZE] = {0};
-    sprintf(line, linefmt, "application/json; charset=UTF-8", strlen(body));
+    long long allWritedSize = 0;//所有已经写出的字节大小
+    long long toWriteSize = srcs.size() - offset;//等待写出的字节大小
 
-    //头部
-    strcat(p, header);
-    p += strlen(header);
-
-    //键值对
-    strcat(p, line);
-    p += strlen(line);
-
-    //换行
-    strcat(p, "\r\n");
-    p += strlen("\r\n");
-
-
-    strcat(p, body);
-    trace("response data:%s", resp);
-    trace("response ok!!");
-    ::write(_fd, resp, strlen(resp));
-
+    while (toWriteSize > 0) {
+        long long writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
+        if (0 > writedSize) {
+            //假错
+            if (errno == EINTR) {
+                //被信号打断
+                continue;
+            }
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                //真的读错了
+                _close = true;
+                break;
+            }
+        } else {
+            toWriteSize -= writedSize;//需要写出去的大小减少
+            allWritedSize += writedSize;//所有已经写出的字节大小
+            offset += writedSize;//偏移量也需要添加
+        }
+    }
+    return allWritedSize;
 }
 
-std::vector<char> &SocketChannel::getReadBuff() {
-    return _readBuff;
-}
-
-bool SocketChannel::finishWrite() {
-    return true;
+bool SocketChannel::close() const {
+    return _close;
 }

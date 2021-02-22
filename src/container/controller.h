@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <functional>
 #include "../protocol/http/httprequest.h"
+#include "../protocol/http/httpresponse.h"
 
 //拼接
 #define M_CONCAT_(a, b) a##b

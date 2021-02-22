@@ -31,21 +31,29 @@ struct SocketChannel {
 
     ~SocketChannel();
 
-    void read();
+    /**
+     * 将数据读到dsts中
+     * @param dsts
+     * @param offset -1表示从末尾开始添加，0表示从头开始添加，其他表示从特定位置开始添加
+     * @return
+     */
+    long long read(std::vector<char> &dsts, long long offset = -1);
 
-    void write();
+    /**
+     * 将数据写出去
+     * @param srcs 源数据
+     * @param offset 写的数据的开始地方
+     * @return
+     */
+    long long write(const std::vector<char> &srcs, long long offset = 0);
 
     int fd() const;
-
-    short getState() const;
 
     std::string getHost() const;
 
     int getPort() const;
 
-    std::vector<char> &getReadBuff();
-
-    bool finishWrite();
+    bool close() const;
 
 private:
 
@@ -54,9 +62,7 @@ private:
     int _port;//端口
     std::string _host;//ip地址
 
-    short _state;//通道的状态
-
-    std::vector<char> _readBuff;//读缓冲区
+    bool _close = false;
 };
 
 #endif //CANDY_CHANNEL_H
