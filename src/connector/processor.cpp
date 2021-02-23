@@ -11,7 +11,8 @@ void SocketProcessor::run() {
         case ProcessorStatus::READ_REQUEST: {
             //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
             //客户端的读事件产生，读到request中
-            _channel->read(*_request, -1);
+            std::vector<char> &buf = _request->getBuffer();
+            _channel->read(buf, buf.size());
 
             //协议解析
             _request->tryDecode();
@@ -43,6 +44,7 @@ void SocketProcessor::run() {
             //如果是可写事件触发
             trace("start write...");
             _channel->write(*_response, 0);
+            trace("response ok!!");
             if (!_channel->close()) {
                 _status = ProcessorStatus::READ_REQUEST;
                 if (_afterWriteCompletedResponse) {

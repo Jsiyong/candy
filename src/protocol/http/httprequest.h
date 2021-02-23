@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "httpbase.h"
 
 #define CR '\r'
 #define LF '\n'
@@ -75,7 +76,7 @@ enum HttpMethod {
 /**
  * http的请求类
  */
-struct HttpRequest {
+struct HttpRequest : public HttpBase {
 
     /**
      * 解析http协议
@@ -89,14 +90,6 @@ struct HttpRequest {
     const std::string &getUrl() const;
 
     const std::map<std::string, std::string> &getRequestParams() const;
-
-    const std::string &getProtocol() const;
-
-    const std::string &getVersion() const;
-
-    const std::map<std::string, std::string> &getHeaders() const;
-
-    const std::vector<char> &getBody() const;
 
     HttpRequestDecodeState getDecodeState() const;
 
@@ -124,19 +117,10 @@ private:
 
     std::map<std::string, std::string> _requestParams;//请求参数
 
-    std::string _protocol;//协议
-    std::string _version;//版本
-
-    std::map<std::string, std::string> _headers;//所有的请求头
-
-    std::vector<char> _body;//请求体
-
     size_t _nextPos = 0;//下一个位置的
     size_t _contentLength = 0;//body的长度
 
     HttpRequestDecodeState _decodeState = HttpRequestDecodeState::START;//解析状态
-
-    std::vector<char> _buf;//请求的数据
 };
 
 #endif //CANDY_HTTPREQUEST_H

@@ -13,7 +13,7 @@
 
 #define IP_SIZE 20
 
-#define MAX_BUFF_SIZE 1024
+#define MAX_BUFF_SIZE 4096
 
 int SocketChannel::fd() const {
     return _fd;
@@ -37,16 +37,14 @@ SocketChannel::~SocketChannel() {
 //    close(_fd);
 }
 
-long long SocketChannel::read(std::vector<char> &dsts, long long offset) {
+size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
     if (offset > dsts.size()) {
         error("offset error! dists size: %d, offset: %d", dsts.size(), offset);
         return 0;
     }
     //计算开始位置
-    std::vector<char>::const_iterator begin = -1 == offset ? dsts.end() : dsts.begin() + offset;
-
     char buf[MAX_BUFF_SIZE];
-    long long allReadSize = 0;//读到的所有字节数
+    size_t allReadSize = 0;//读到的所有字节数
     while (true) {
 
         int readSize = ::read(_fd, buf, MAX_BUFF_SIZE);
@@ -59,8 +57,8 @@ long long SocketChannel::read(std::vector<char> &dsts, long long offset) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 //真的读错了
                 _close = true;
-                break;
             }
+            break;
         } else if (0 == readSize) {
             _close = true;
             //同时关闭fd，防止四次挥手的时候，客户端又发来一遍
@@ -68,12 +66,13 @@ long long SocketChannel::read(std::vector<char> &dsts, long long offset) {
             //通道的状态变为关闭
             break;
         } else {
-            dsts.insert(begin, buf, buf + readSize);
-
+            //迭代器的位置会变的，所以需要每次都从开始位置插入
+            dsts.insert(dsts.begin() + offset, buf, buf + readSize);
             allReadSize += readSize;//添加到总数去
-            begin += readSize;//读取的开始位置也发生偏移
+            offset += readSize;//插入的开始位置也发生偏移
         }
     }
+    error("allsize: %lld,size:%lld", allReadSize, dsts.size());
     return allReadSize;
 }
 
@@ -85,18 +84,18 @@ int SocketChannel::getPort() const {
     return _port;
 }
 
-long long SocketChannel::write(const std::vector<char> &srcs, long long offset) {
+size_t SocketChannel::write(const std::vector<char> &srcs, size_t offset) {
     //读指针的偏移大小不能大于数组的大小
     if (offset > srcs.size()) {
         error("offset error! srcs size: %d, offset: %d", srcs.size(), offset);
         return 0;
     }
 
-    long long allWritedSize = 0;//所有已经写出的字节大小
-    long long toWriteSize = srcs.size() - offset;//等待写出的字节大小
+    size_t allWritedSize = 0;//所有已经写出的字节大小
+    size_t toWriteSize = srcs.size() - offset;//等待写出的字节大小
 
     while (toWriteSize > 0) {
-        long long writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
+        size_t writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
         if (0 > writedSize) {
             //假错
             if (errno == EINTR) {
@@ -106,8 +105,8 @@ long long SocketChannel::write(const std::vector<char> &srcs, long long offset) 
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 //真的读错了
                 _close = true;
-                break;
             }
+            break;
         } else {
             toWriteSize -= writedSize;//需要写出去的大小减少
             allWritedSize += writedSize;//所有已经写出的字节大小

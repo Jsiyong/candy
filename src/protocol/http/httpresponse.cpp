@@ -40,7 +40,7 @@ HttpResponse::HttpResponse() {
     str += "Content-Type:application/json; charset=UTF-8\r\nContent-Length:" + std::to_string(body.size()) + "\r\n";
     str += "\r\n";
     str += body;
-    trace("response ok!!");
+    _buf.insert(_buf.end(), str.begin(), str.end());
 }
 
 HttpResponse::operator std::vector<char> &() {

@@ -352,22 +352,6 @@ const std::map<std::string, std::string> &HttpRequest::getRequestParams() const 
     return _requestParams;
 }
 
-const std::string &HttpRequest::getProtocol() const {
-    return _protocol;
-}
-
-const std::string &HttpRequest::getVersion() const {
-    return _version;
-}
-
-const std::map<std::string, std::string> &HttpRequest::getHeaders() const {
-    return _headers;
-}
-
-const std::vector<char> &HttpRequest::getBody() const {
-    return _body;
-}
-
 void HttpRequest::clear() {
     _method.clear();//请求方法
 
