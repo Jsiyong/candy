@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include "../log/logger.h"
 
-constexpr int maxIpBuffSize = 20;
-constexpr size_t maxReadBuffSize = 4096;
+constexpr int MaxIpBuffSize = 20;
+constexpr size_t MaxReadBuffSize = 4096;
 
 int SocketChannel::fd() const {
     return _fd;
@@ -25,7 +25,7 @@ SocketChannel::SocketChannel(int fd) : _fd(fd) {
     socklen_t socklen = sizeof(raddr);
     //获取地址
     getpeername(_fd, (struct sockaddr *) &raddr, &socklen);
-    char iptmp[maxIpBuffSize];
+    char iptmp[MaxIpBuffSize];
     inet_ntop(AF_INET, &raddr.sin_addr, iptmp, socklen);
     _host = iptmp;
     _port = ntohs(raddr.sin_port);
@@ -49,12 +49,12 @@ size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
 
     while (true) {
         //判断是不是需要创建新的空间
-        if (newOffset + maxReadBuffSize > dsts.size()) {
-            dsts.resize(newOffset + maxReadBuffSize);//新的大小
+        if (newOffset + MaxReadBuffSize > dsts.size()) {
+            dsts.resize(newOffset + MaxReadBuffSize);//新的大小
             alloc = true;
         }
 
-        int readSize = ::read(_fd, dsts.data() + newOffset, maxReadBuffSize);
+        int readSize = ::read(_fd, dsts.data() + newOffset, MaxReadBuffSize);
         if (0 > readSize) {
             //假错
             if (errno == EINTR) {

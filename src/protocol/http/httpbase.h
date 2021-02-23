@@ -26,6 +26,8 @@ struct HttpBase {
 
     void setHeaders(const std::map<std::string, std::string> &headers);
 
+    void setHeader(const std::string &key, const std::string &value);
+
     const std::vector<char> &getBody() const;
 
     void setBody(const std::vector<char> &body);

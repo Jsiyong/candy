@@ -42,3 +42,7 @@ void HttpBase::clear() {
 std::vector<char> &HttpBase::getBuffer() {
     return _buf;
 }
+
+void HttpBase::setHeader(const std::string &key, const std::string &value) {
+    _headers[key] = value;
+}

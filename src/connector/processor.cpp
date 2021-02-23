@@ -43,7 +43,10 @@ void SocketProcessor::run() {
         case ProcessorStatus::WRITE_RESPONSE: {
             //如果是可写事件触发
             trace("start write...");
-            _channel->write(*_response, 0);
+            _response->encode();
+            trace("response data: %s", _response->getBuffer());
+            _channel->write(_response->getBuffer(), 0);
+
             trace("response ok!!");
             if (!_channel->close()) {
                 _status = ProcessorStatus::READ_REQUEST;

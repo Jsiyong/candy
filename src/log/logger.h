@@ -38,6 +38,13 @@
         }                       \
     } while (0)
 
+#define error_if(b, ...)        \
+    do {                        \
+        if ((b)) {              \
+            error(__VA_ARGS__); \
+        }                       \
+    } while (0)
+
 /**
  * 同步日志管理器
  */
