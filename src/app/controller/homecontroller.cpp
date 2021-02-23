@@ -13,7 +13,7 @@ struct HomeController : public Controller<HomeController> {
         for (auto &p : request->getRequestParams()) {
             trace("[request params] key: %s, value: %s", p.first, p.second);
         }
-        info("[body size] %lld", request->getBody().size());
+        info("[body size/KB] %lld", request->getBody().size() / 1024);
 
     }
 

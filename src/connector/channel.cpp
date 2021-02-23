@@ -11,9 +11,8 @@
 #include <stdio.h>
 #include "../log/logger.h"
 
-#define IP_SIZE 20
-
-#define MAX_BUFF_SIZE 4096
+constexpr int maxIpBuffSize = 20;
+constexpr size_t maxReadBuffSize = 4096;
 
 int SocketChannel::fd() const {
     return _fd;
@@ -26,7 +25,7 @@ SocketChannel::SocketChannel(int fd) : _fd(fd) {
     socklen_t socklen = sizeof(raddr);
     //获取地址
     getpeername(_fd, (struct sockaddr *) &raddr, &socklen);
-    char iptmp[IP_SIZE];
+    char iptmp[maxIpBuffSize];
     inet_ntop(AF_INET, &raddr.sin_addr, iptmp, socklen);
     _host = iptmp;
     _port = ntohs(raddr.sin_port);
@@ -38,16 +37,24 @@ SocketChannel::~SocketChannel() {
 }
 
 size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
-    if (offset > dsts.size()) {
+    size_t newOffset = offset;
+
+    if (newOffset > dsts.size()) {
         error("offset error! dists size: %d, offset: %d", dsts.size(), offset);
         return 0;
     }
-    //计算开始位置
-    char buf[MAX_BUFF_SIZE];
-    size_t allReadSize = 0;//读到的所有字节数
-    while (true) {
 
-        int readSize = ::read(_fd, buf, MAX_BUFF_SIZE);
+    size_t allReadSize = 0;//读到的所有字节数
+    bool alloc = false;//是否重新分配过空间
+
+    while (true) {
+        //判断是不是需要创建新的空间
+        if (newOffset + maxReadBuffSize > dsts.size()) {
+            dsts.resize(newOffset + maxReadBuffSize);//新的大小
+            alloc = true;
+        }
+
+        int readSize = ::read(_fd, dsts.data() + newOffset, maxReadBuffSize);
         if (0 > readSize) {
             //假错
             if (errno == EINTR) {
@@ -66,13 +73,15 @@ size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
             //通道的状态变为关闭
             break;
         } else {
-            //迭代器的位置会变的，所以需要每次都从开始位置插入
-            dsts.insert(dsts.begin() + offset, buf, buf + readSize);
             allReadSize += readSize;//添加到总数去
-            offset += readSize;//插入的开始位置也发生偏移
+            newOffset += readSize;//插入的开始位置也发生偏移
         }
     }
-    error("allsize: %lld,size:%lld", allReadSize, dsts.size());
+
+    //判断是不是需要修改数组的大小，剪掉无用的内容
+    if (alloc) {
+        dsts.erase(dsts.begin() + offset + allReadSize, dsts.end());
+    }
     return allReadSize;
 }
 
