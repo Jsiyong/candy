@@ -13,6 +13,8 @@
  */
 struct HttpResponse : public HttpBase {
 
+    HttpResponse();
+
     void setNotFound();
 
     /**

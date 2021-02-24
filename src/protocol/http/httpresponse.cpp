@@ -44,3 +44,8 @@ void HttpResponse::clear() {
     _statusCode = 200;
     _statusWord.assign("OK");
 }
+
+HttpResponse::HttpResponse() {
+    _statusCode = 200;
+    _statusWord.assign("OK");
+}
