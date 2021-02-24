@@ -18,7 +18,7 @@ void SocketProcessor::run() {
             _request->tryDecode();
 
             //解析http完成之后，下一步就是回复客户端
-            if (_request->getDecodeState() == HttpRequestDecodeState::COMPLETE) {
+            if (_request->completed()) {
                 //在这里开始处理业务
                 _status = ProcessorStatus::DO_SERVICE;
                 if (_afterReadCompletedRequest) {

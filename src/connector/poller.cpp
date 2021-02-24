@@ -129,7 +129,7 @@ void Poller::updateEvent(int fd, uint32_t events) {
     event.data.fd = fd;
     event.events = events | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
     int ret = epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &event);//注意是EPOLL_CTL_MOD修改
-    exit_if(ret < 0, "epoll_ctl mod error:%s", strerror(errno));
+    exit_if(ret < 0, "epoll_ctl mod[events: %d] error:%s", events, strerror(errno));
 }
 
 void Poller::removeEvent(int fd) {
