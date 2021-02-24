@@ -13,7 +13,7 @@
 /**
  * Http请求行的状态
  */
-enum HttpRequestDecodeState {
+enum DecodeState {
     INVALID,//无效
 
     START,//请求行开始
@@ -48,259 +48,242 @@ enum HttpRequestDecodeState {
     COMPLETE//完成
 };
 
-void HttpRequest::tryDecode() {
-    if (_buf.empty()) {
+void HttpRequest::tryDecode(const std::string &src) {
+    //解析完成或者buf为空都直接返回
+    if (src.empty() || completed()) {
         return;
     }
-    if (_decodeState == HttpRequestDecodeState::COMPLETE) {
-        //如果解析完成，则再解析一遍
-        this->clear();
-    }
-    this->parseInternal(_buf.data() + _nextPos, _buf.size());
-#if 0
-    //如果是长连接，可能会出现上一个请求解析完了，下面会解析下一个请求，所以清空之前解析玩的数据
-    buf.assign(buf.begin() + _nextPos, buf.end());
-#endif
-}
 
-//解析请求行
-void HttpRequest::parseInternal(char *buf, size_t end) {
-
-    while (_decodeState != HttpRequestDecodeState::INVALID
-           && _decodeState != HttpRequestDecodeState::COMPLETE
-           && _nextPos < end) {
-
-        _nextPos++;//比较完之后下一个指针往后偏移
-        char ch = *buf;//当前的字符
-        char *p = buf++;//指针偏移
-
+    size_t i = 0;
+    for (; i < src.size() && _decodeState != DecodeState::INVALID && _decodeState != DecodeState::COMPLETE; ++i) {
+        char ch = src.at(i);//当前的字符
         switch (_decodeState) {
-            case HttpRequestDecodeState::START: {
+            case DecodeState::START: {
                 //空格 换行 回车都继续
                 if (ch == CR || ch == LF || isblank(ch)) {
                     //do nothing
                 } else if (isupper(ch)) {//判断是不是大写字符，不是的话是无效的
                     _method.assign(1, ch);//方法的起始点
 
-                    _decodeState = HttpRequestDecodeState::METHOD;//如果遇到第一个字符，开始解析方法
+                    _decodeState = DecodeState::METHOD;//如果遇到第一个字符，开始解析方法
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::METHOD: {
+            case DecodeState::METHOD: {
                 //方法需要大写字母，大写字母就继续
                 if (isupper(ch)) {
                     _method.push_back(ch);
                 } else if (isblank(ch)) {//空格，说明方法解析结束，下一步开始解析URI
-                    _decodeState = HttpRequestDecodeState::BEFORE_URI;
+                    _decodeState = DecodeState::BEFORE_URI;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;//其他情况是无效的请求方法
+                    _decodeState = DecodeState::INVALID;//其他情况是无效的请求方法
                 }
                 break;
             }
-            case HttpRequestDecodeState::BEFORE_URI: {
+            case DecodeState::BEFORE_URI: {
                 //请求连接前的处理，需要'/'开头
                 if (ch == '/') {
                     _url.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::IN_URI;//下一步就是开始处理连接
+                    _decodeState = DecodeState::IN_URI;//下一步就是开始处理连接
                 } else if (isblank(ch)) {
                     //do nothing
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;//无效的
+                    _decodeState = DecodeState::INVALID;//无效的
                 }
                 break;
             }
-            case HttpRequestDecodeState::IN_URI: {
+            case DecodeState::IN_URI: {
                 //开始处理请求路径的字符串
                 if (ch == '?') {//转为处理请求的key值
-                    _decodeState = HttpRequestDecodeState::BEFORE_URI_PARAM_KEY;
+                    _decodeState = DecodeState::BEFORE_URI_PARAM_KEY;
                 } else if (isblank(ch)) {//遇到空格，请求路径解析完成，开始解析协议
-                    _decodeState = HttpRequestDecodeState::BEFORE_PROTOCOL;
+                    _decodeState = DecodeState::BEFORE_PROTOCOL;
                 } else {
                     _url.push_back(ch);
                 }
                 break;
             }
-            case HttpRequestDecodeState::BEFORE_URI_PARAM_KEY: {
+            case DecodeState::BEFORE_URI_PARAM_KEY: {
                 if (isblank(ch) || ch == LF || ch == CR) {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 } else {
                     _requestParamKey.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::URI_PARAM_KEY;
+                    _decodeState = DecodeState::URI_PARAM_KEY;
                 }
                 break;
             }
-            case HttpRequestDecodeState::URI_PARAM_KEY: {
+            case DecodeState::URI_PARAM_KEY: {
                 if (ch == '=') {
-                    _decodeState = HttpRequestDecodeState::BEFORE_URI_PARAM_VALUE;//开始解析参数值
+                    _decodeState = DecodeState::BEFORE_URI_PARAM_VALUE;//开始解析参数值
                 } else if (isblank(ch)) {
-                    _decodeState = HttpRequestDecodeState::INVALID;//无效的请求参数
+                    _decodeState = DecodeState::INVALID;//无效的请求参数
                 } else {
                     _requestParamKey.push_back(ch);
                 }
                 break;
             }
-            case HttpRequestDecodeState::BEFORE_URI_PARAM_VALUE: {
+            case DecodeState::BEFORE_URI_PARAM_VALUE: {
                 if (isblank(ch) || ch == LF || ch == CR) {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 } else {
                     _requestParamValue.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::URI_PARAM_VALUE;
+                    _decodeState = DecodeState::URI_PARAM_VALUE;
                 }
                 break;
             }
-            case HttpRequestDecodeState::URI_PARAM_VALUE: {
+            case DecodeState::URI_PARAM_VALUE: {
                 if (ch == '&') {
                     //收获一个请求参数
                     _requestParams.insert({_requestParamKey, _requestParamValue});
-                    _decodeState = HttpRequestDecodeState::BEFORE_URI_PARAM_KEY;
+                    _decodeState = DecodeState::BEFORE_URI_PARAM_KEY;
                 } else if (isblank(ch)) {
                     //空格也收获一个请求参数
                     _requestParams.insert({_requestParamKey, _requestParamValue});
-                    _decodeState = HttpRequestDecodeState::BEFORE_PROTOCOL;
+                    _decodeState = DecodeState::BEFORE_PROTOCOL;
                 } else {
                     _requestParamValue.push_back(ch);
                 }
                 break;
             }
-            case HttpRequestDecodeState::BEFORE_PROTOCOL: {
+            case DecodeState::BEFORE_PROTOCOL: {
                 if (isblank(ch)) {
                     //do nothing
                 } else {
                     _protocol.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::PROTOCOL;
+                    _decodeState = DecodeState::PROTOCOL;
                 }
                 break;
             }
-            case HttpRequestDecodeState::PROTOCOL: {
+            case DecodeState::PROTOCOL: {
                 //解析请求协议
                 if (ch == '/') {
-                    _decodeState = HttpRequestDecodeState::BEFORE_VERSION;
+                    _decodeState = DecodeState::BEFORE_VERSION;
                 } else {
                     _protocol.push_back(ch);
                 }
                 break;
             }
-            case HttpRequestDecodeState::BEFORE_VERSION: {
+            case DecodeState::BEFORE_VERSION: {
                 if (isdigit(ch)) {
                     _version.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::VERSION;
+                    _decodeState = DecodeState::VERSION;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::VERSION: {
+            case DecodeState::VERSION: {
                 //协议解析，如果不是数字或者. 就不对
                 if (ch == CR) {
-                    _decodeState = HttpRequestDecodeState::WHEN_CR;
+                    _decodeState = DecodeState::WHEN_CR;
                 } else if (ch == '.') {
                     //遇到版本分割
-                    _decodeState = HttpRequestDecodeState::VERSION_SPLIT;
+                    _decodeState = DecodeState::VERSION_SPLIT;
                 } else if (isdigit(ch)) {
                     _version.push_back(ch);
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;//不能不是数字
+                    _decodeState = DecodeState::INVALID;//不能不是数字
                 }
                 break;
             }
-            case HttpRequestDecodeState::VERSION_SPLIT: {
+            case DecodeState::VERSION_SPLIT: {
                 //遇到版本分割符，字符必须是数字，其他情况都是错误
                 if (isdigit(ch)) {
-                    _decodeState = HttpRequestDecodeState::VERSION;
+                    _decodeState = DecodeState::VERSION;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::HEADER_KEY: {
+            case DecodeState::HEADER_KEY: {
                 //冒号前后可能有空格
                 if (isblank(ch)) {
-                    _decodeState = HttpRequestDecodeState::HEADER_BEFORE_COLON;//冒号之前的状态
+                    _decodeState = DecodeState::HEADER_BEFORE_COLON;//冒号之前的状态
                 } else if (ch == ':') {
-                    _decodeState = HttpRequestDecodeState::HEADER_AFTER_COLON;//冒号之后的状态
+                    _decodeState = DecodeState::HEADER_AFTER_COLON;//冒号之后的状态
                 } else {
                     _headerKey.push_back(ch);
                 }
                 break;
             }
-            case HttpRequestDecodeState::HEADER_BEFORE_COLON: {
+            case DecodeState::HEADER_BEFORE_COLON: {
                 if (isblank(ch)) {
                     //do nothing
                 } else if (ch == ':') {
-                    _decodeState = HttpRequestDecodeState::HEADER_AFTER_COLON;
+                    _decodeState = DecodeState::HEADER_AFTER_COLON;
                 } else {
                     //冒号之前的状态不能是空格之外的其他字符
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::HEADER_AFTER_COLON: {
+            case DecodeState::HEADER_AFTER_COLON: {
                 if (isblank(ch)) {//值之前遇到空格都是正常的
                     //do nothing
                 } else {
                     _headerValue.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::HEADER_VALUE;//开始处理值
+                    _decodeState = DecodeState::HEADER_VALUE;//开始处理值
                 }
                 break;
             }
-            case HttpRequestDecodeState::HEADER_VALUE: {
+            case DecodeState::HEADER_VALUE: {
                 if (ch == CR) {
                     _headers.insert({_headerKey, _headerValue});
-                    _decodeState = HttpRequestDecodeState::WHEN_CR;
+                    _decodeState = DecodeState::WHEN_CR;
                 }
                 _headerValue.push_back(ch);
                 break;
             }
-            case HttpRequestDecodeState::WHEN_CR: {
+            case DecodeState::WHEN_CR: {
                 if (ch == LF) {
                     //如果是回车，可换成下一个
-                    _decodeState = HttpRequestDecodeState::CR_LF;
+                    _decodeState = DecodeState::CR_LF;
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::CR_LF: {
+            case DecodeState::CR_LF: {
                 if (ch == CR) {
                     //如果在CR_LF状态之后还有CR，那么便是有点结束的味道了
-                    _decodeState = HttpRequestDecodeState::CR_LF_CR;
+                    _decodeState = DecodeState::CR_LF_CR;
                 } else if (isblank(ch)) {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 } else {
                     //如果不是，那么就可能又是一个请求头了，那就开始解析请求头
                     _headerKey.assign(1, ch);
-                    _decodeState = HttpRequestDecodeState::HEADER_KEY;
+                    _decodeState = DecodeState::HEADER_KEY;
                 }
                 break;
             }
-            case HttpRequestDecodeState::CR_LF_CR: {
+            case DecodeState::CR_LF_CR: {
                 if (ch == LF) {
                     //如果是\r接着\n 那么判断是不是需要解析请求体
                     if (_headers.count("Content-Length") > 0) {
                         _contentLength = atoll(_headers["Content-Length"].c_str());
                         if (_contentLength > 0) {
                             _body.reserve(_contentLength);//预分配body的大小,提高下面构造数组的效率
-                            _decodeState = HttpRequestDecodeState::BODY;//解析请求体
+                            _decodeState = DecodeState::BODY;//解析请求体
                         } else {
-                            _decodeState = HttpRequestDecodeState::COMPLETE;
+                            _decodeState = DecodeState::COMPLETE;
                         }
                     } else {
-                        _decodeState = HttpRequestDecodeState::COMPLETE;
+                        _decodeState = DecodeState::COMPLETE;
                     }
                 } else {
-                    _decodeState = HttpRequestDecodeState::INVALID;
+                    _decodeState = DecodeState::INVALID;
                 }
                 break;
             }
-            case HttpRequestDecodeState::BODY: {
+            case DecodeState::BODY: {
                 //解析请求体
                 _body.push_back(ch);
                 if (_body.size() < _contentLength) {
                     //如果还没满足大小要求，则继续解析请求体
                 } else {
-                    _decodeState = HttpRequestDecodeState::COMPLETE;
+                    _decodeState = DecodeState::COMPLETE;
                 }
                 break;
             }
@@ -323,29 +306,22 @@ const std::map<std::string, std::string> &HttpRequest::getRequestParams() const 
 }
 
 void HttpRequest::clear() {
+    HttpBase::clear();//基类的删除
+
     _method.clear();//请求方法
 
     _url.clear();//请求路径[不包含请求参数]
 
     _requestParams.clear();//请求参数
 
-    _protocol.clear();//协议
-    _version.clear();//版本
-
-    _headers.clear();//所有的请求头
-
-    _body.clear();//请求体
-
-//    _nextPos = 0;//下一个位置的..这个不能清除，否则解析出错
     _contentLength = 0;//body的长度
-
-    _decodeState = HttpRequestDecodeState::START;//解析状态
+    _decodeState = DecodeState::START;//解析状态
 }
 
 bool HttpRequest::completed() const {
-    return _decodeState == HttpRequestDecodeState::COMPLETE;
+    return _decodeState == DecodeState::COMPLETE;
 }
 
 HttpRequest::HttpRequest() {
-    _decodeState = HttpRequestDecodeState::START;
+    _decodeState = DecodeState::START;
 }

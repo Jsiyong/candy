@@ -11,6 +11,10 @@ void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
     trace("[method]%s", request->getMethod());
     trace("[url]%s", request->getUrl());
 
+    for (auto &p:request->getHeaders()) {
+        trace("[request headers] key: %s, value: %s", p.first, p.second);
+    }
+
     //根据路径获取对应的处理方法
     const std::string &url = request->getUrl();
     //根据请求路径获取业务处理方法的指针对象
@@ -18,5 +22,8 @@ void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
     if (event) {
         //调用业务处理方法
         event(request, response);
+    } else {
+        //如果没有业务可以处理这个请求，那么请求返回错误
+        response->setNotFound();
     }
 }

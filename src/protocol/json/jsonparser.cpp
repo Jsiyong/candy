@@ -349,22 +349,20 @@ JsonValue JsonParser::genJsonObjectViaTokens(std::list<JsonToken> &tokens) {
     return jsonObject;
 }
 
-std::vector<char> JsonParser::parse(const JsonValue &root) {
-    std::vector<char> json;
+std::string JsonParser::parse(const JsonValue &root) {
+    std::string json;
 
     switch (root.type()) {
         case JsonValueType::Null: {
-            json.insert(json.end(), {'n', 'u', 'l', 'l'});
+            json.append("null");
             break;
         }
         case JsonValueType::Double: {
-            std::string str = std::to_string(root.toDouble());
-            json.insert(json.end(), str.begin(), str.end());
+            json.append(std::to_string(root.toDouble()));
             break;
         }
         case JsonValueType::LongLong: {
-            std::string str = std::to_string(root.toLongLong());
-            json.insert(json.end(), str.begin(), str.end());
+            json.append(std::to_string(root.toLongLong()));
             break;
         }
         case JsonValueType::String: {
@@ -373,25 +371,25 @@ std::vector<char> JsonParser::parse(const JsonValue &root) {
             for (char ch : root.toString()) {
                 switch (ch) {
                     case '\"':
-                        json.insert(json.end(), {'\\', '\"'});
+                        json.append({'\\', '\"'});
                         break;
                     case '\\':
-                        json.insert(json.end(), {'\\', '\\'});
+                        json.append({'\\', '\\'});
                         break;
                     case '\b':
-                        json.insert(json.end(), {'\\', 'b'});
+                        json.append({'\\', 'b'});
                         break;
                     case '\f':
-                        json.insert(json.end(), {'\\', 'f'});
+                        json.append({'\\', 'f'});
                         break;
                     case '\n':
-                        json.insert(json.end(), {'\\', 'n'});
+                        json.append({'\\', 'n'});
                         break;
                     case '\r':
-                        json.insert(json.end(), {'\\', 'r'});
+                        json.append({'\\', 'r'});
                         break;
                     case '\t':
-                        json.insert(json.end(), {'\\', 't'});
+                        json.append({'\\', 't'});
                         break;
                     default:
                         json.push_back(ch);//其他情况不变
@@ -403,9 +401,9 @@ std::vector<char> JsonParser::parse(const JsonValue &root) {
         }
         case JsonValueType::Boolean: {
             if (root.toBoolean()) {
-                json.insert(json.end(), {'t', 'r', 'u', 'e'});
+                json.append("true");
             } else {
-                json.insert(json.end(), {'f', 'a', 'l', 's', 'e'});
+                json.append("false");
             }
             break;
         }
@@ -418,8 +416,7 @@ std::vector<char> JsonParser::parse(const JsonValue &root) {
                 } else {
                     json.push_back(',');//不是第一次，就加上','分割符
                 }
-                std::vector<char> jsonTmp = parse(v);
-                json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
+                json.append(parse(v));
             }
             json.push_back(']');
             break;
@@ -434,15 +431,13 @@ std::vector<char> JsonParser::parse(const JsonValue &root) {
                     json.push_back(',');//不是第一次，就加上','分割符
                 }
                 //找出key
-                std::vector<char> jsonTmp = parse(kv.first);
-                json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
+                json.append(parse(kv.first));
 
                 //插入分割符
                 json.push_back(':');
 
                 //找出value
-                jsonTmp = parse(kv.second);
-                json.insert(json.end(), jsonTmp.begin(), jsonTmp.end());
+                json.append(parse(kv.second));
             }
             json.push_back('}');
             break;

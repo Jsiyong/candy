@@ -34,18 +34,17 @@ struct SocketChannel {
     /**
      * 将数据读到dsts中
      * @param dsts
-     * @param 0表示从头开始添加，其他表示从特定位置开始添加
+     * @param 从末尾添加
      * @return
      */
-    size_t read(std::vector<char> &dsts, size_t offset = 0);
+    size_t read(std::string &dsts);
 
     /**
      * 将数据写出去
-     * @param srcs 源数据
-     * @param offset 写的数据的开始地方
+     * @param srcs 源数据 从开头开始写
      * @return
      */
-    size_t write(const std::vector<char> &srcs, size_t offset = 0);
+    size_t write(const std::string &srcs);
 
     int fd() const;
 

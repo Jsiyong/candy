@@ -13,14 +13,14 @@
  */
 struct HttpResponse : public HttpBase {
 
-    HttpResponse();
-
-    operator std::vector<char> &();
+    void setNotFound();
 
     /**
      * 对回复的内容进行编码
      */
-    void encode();
+    void encode(std::string &dst);
+
+    void clear() override;
 
 private:
     int _statusCode = 0;//状态码

@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <stdio.h>
 #include "../log/logger.h"
 
 constexpr int MaxIpBuffSize = 20;
@@ -36,25 +35,14 @@ SocketChannel::~SocketChannel() {
 //    close(_fd);
 }
 
-size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
-    size_t newOffset = offset;
-
-    if (newOffset > dsts.size()) {
-        error("offset error! dists size: %d, offset: %d", dsts.size(), offset);
-        return 0;
-    }
+size_t SocketChannel::read(std::string &dsts) {
 
     size_t allReadSize = 0;//读到的所有字节数
-    bool alloc = false;//是否重新分配过空间
 
     while (true) {
-        //判断是不是需要创建新的空间
-        if (newOffset + MaxReadBuffSize > dsts.size()) {
-            dsts.resize(newOffset + MaxReadBuffSize);//新的大小
-            alloc = true;
-        }
+        char buf[MaxReadBuffSize];
 
-        int readSize = ::read(_fd, dsts.data() + newOffset, MaxReadBuffSize);
+        int readSize = ::read(_fd, buf, MaxReadBuffSize);
         if (0 > readSize) {
             //假错
             if (errno == EINTR) {
@@ -64,6 +52,7 @@ size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 //真的读错了
                 _close = true;
+                error("read error: %s", strerror(errno));
             }
             break;
         } else if (0 == readSize) {
@@ -74,13 +63,8 @@ size_t SocketChannel::read(std::vector<char> &dsts, size_t offset) {
             break;
         } else {
             allReadSize += readSize;//添加到总数去
-            newOffset += readSize;//插入的开始位置也发生偏移
+            dsts.append(buf, buf + readSize);//添加到dsts中
         }
-    }
-
-    //判断是不是需要修改数组的大小，剪掉无用的内容
-    if (alloc) {
-        dsts.erase(dsts.begin() + offset + allReadSize, dsts.end());
     }
     return allReadSize;
 }
@@ -93,16 +77,12 @@ int SocketChannel::getPort() const {
     return _port;
 }
 
-size_t SocketChannel::write(const std::vector<char> &srcs, size_t offset) {
-    //读指针的偏移大小不能大于数组的大小
-    if (offset > srcs.size()) {
-        error("offset error! srcs size: %d, offset: %d", srcs.size(), offset);
-        return 0;
-    }
+size_t SocketChannel::write(const std::string &srcs) {
 
     size_t allWritedSize = 0;//所有已经写出的字节大小
-    size_t toWriteSize = srcs.size() - offset;//等待写出的字节大小
 
+    size_t offset = 0;//偏移量
+    size_t toWriteSize = srcs.size() - offset;//等待写出的字节大小
     while (toWriteSize > 0) {
         size_t writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
         if (0 > writedSize) {

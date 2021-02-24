@@ -53,6 +53,9 @@ private:
     HttpRequest *_request = NULL;//http请求对象
     HttpResponse *_response = NULL;//响应对象
 
+    std::string _recvBuffer;//接受缓冲区
+    std::string _sendBuffer;//发送缓冲区
+
     Servlet *_servlet = NULL;//用户应用
 
     //回调函数

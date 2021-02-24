@@ -43,7 +43,7 @@ struct JsonParser {
      * 将jsonValue转为Json
      * json: 返回的值
      */
-    static std::vector<char> parse(const JsonValue &root);
+    static std::string parse(const JsonValue &root);
 
 private:
 

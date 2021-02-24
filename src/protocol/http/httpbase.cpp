@@ -27,20 +27,19 @@ void HttpBase::setHeaders(const std::map<std::string, std::string> &headers) {
     _headers = headers;
 }
 
-const std::vector<char> &HttpBase::getBody() const {
+const std::string &HttpBase::getBody() const {
     return _body;
 }
 
-void HttpBase::setBody(const std::vector<char> &body) {
+void HttpBase::setBody(const std::string &body) {
     _body = body;
 }
 
 void HttpBase::clear() {
-
-}
-
-std::vector<char> &HttpBase::getBuffer() {
-    return _buf;
+    _version.clear();
+    _protocol.clear();
+    _headers.clear();
+    _body.clear();
 }
 
 void HttpBase::setHeader(const std::string &key, const std::string &value) {

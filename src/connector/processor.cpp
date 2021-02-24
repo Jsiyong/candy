@@ -10,21 +10,23 @@ void SocketProcessor::run() {
     switch (_status) {
         case ProcessorStatus::READ_REQUEST: {
             //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
-            //客户端的读事件产生，读到request中
-            std::vector<char> &buf = _request->getBuffer();
-            _channel->read(buf, buf.size());
+            //客户端的读事件产生，读到recvBuffer中
+            _channel->read(_recvBuffer);
 
             //协议解析
-            _request->tryDecode();
+            _request->tryDecode(_recvBuffer);
 
             //解析http完成之后，下一步就是回复客户端
             if (_request->completed()) {
+                //解析完成后清空buf
+                _recvBuffer.clear();
                 //在这里开始处理业务
                 _status = ProcessorStatus::DO_SERVICE;
                 if (_afterReadCompletedRequest) {
                     _afterReadCompletedRequest();
                 }
             } else {
+                //协议没解析完，下一次继续读取客户端请求
                 if (_afterReadUnCompletedRequest) {
                     _afterReadUnCompletedRequest();
                 }
@@ -35,7 +37,10 @@ void SocketProcessor::run() {
             //开始做业务
             //做业务
             _servlet->service(_request, _response);
-
+            //做完业务开始http回复报文的编码，将数据读取到发送缓冲区中
+            _response->encode(_sendBuffer);
+            _request->clear();//请求数据也没有用了
+            _response->clear();//响应报文也没用了
             //做完业务就开始写数据
             _status = ProcessorStatus::WRITE_RESPONSE;
             //注意，不要break，因为做完业务之后就开始写数据了，状态直接就是ProcessorStatus::WRITE_RESPONSE
@@ -43,17 +48,17 @@ void SocketProcessor::run() {
         case ProcessorStatus::WRITE_RESPONSE: {
             //如果是可写事件触发
             trace("start write...");
-            _response->encode();
-            trace("response data: %s", _response->getBuffer());
-            _channel->write(_response->getBuffer(), 0);
+            size_t writedSize = _channel->write(_sendBuffer);
+            trace("response data: %s", _sendBuffer);
+            _sendBuffer.erase(0, writedSize);//写完之后就清空缓冲区
 
-            trace("response ok!!");
-            if (!_channel->close()) {
+            if (_sendBuffer.empty()) {
                 _status = ProcessorStatus::READ_REQUEST;
                 if (_afterWriteCompletedResponse) {
                     _afterWriteCompletedResponse();
                 }
             } else {
+                //还有空余数据没发送
                 if (_afterWriteUnCompletedResponse) {
                     _afterWriteUnCompletedResponse();
                 }

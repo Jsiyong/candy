@@ -28,21 +28,18 @@ struct HttpBase {
 
     void setHeader(const std::string &key, const std::string &value);
 
-    const std::vector<char> &getBody() const;
+    const std::string &getBody() const;
 
-    void setBody(const std::vector<char> &body);
+    void setBody(const std::string &body);
 
     virtual void clear();
-
-    std::vector<char> &getBuffer();
 
 protected:
     std::string _protocol;//协议
     std::string _version;//版本
 
     std::map<std::string, std::string> _headers;//所有的请求头/响应头
-    std::vector<char> _body;//请求体/响应体
-    std::vector<char> _buf;//请求的数据/响应的数据
+    std::string _body;//请求体/响应体
 };
 
 #endif //CANDY_HTTPBASE_H
