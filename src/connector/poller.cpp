@@ -77,6 +77,8 @@ void *Poller::execEventLoop(void *param) {
                 error("client[%d] disconnected..", clifd);
                 pPoller->removeEvent(clifd);
                 close(clifd);
+                //记得删掉指针
+                delete pPoller->_socketProcessors[clifd];
                 pPoller->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
                 //提交任务
