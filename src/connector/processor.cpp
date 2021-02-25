@@ -20,7 +20,7 @@ void SocketProcessor::run() {
             _recvBuffer.clear();
 
             //解析http完成之后，下一步就是回复客户端
-            if (_request->completed() || !_request->valid()) {
+            if (_request->completed()/* || !_request->valid()*/) {
                 //在这里开始处理业务
                 _status = ProcessorStatus::DO_SERVICE;
                 if (_afterReadCompletedRequest) {

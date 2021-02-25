@@ -38,7 +38,7 @@ SocketChannel::~SocketChannel() {
 size_t SocketChannel::read(std::string &dsts) {
 
     size_t allReadSize = 0;//读到的所有字节数
-
+    dsts.reserve(MaxReadBuffSize);//先预出MaxReadBuffSize的空间
     while (true) {
         char buf[MaxReadBuffSize];
 
