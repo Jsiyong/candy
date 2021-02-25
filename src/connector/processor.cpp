@@ -50,7 +50,7 @@ void SocketProcessor::run() {
             //如果是可写事件触发
             trace("start write...");
             size_t writedSize = _channel->write(_sendBuffer);
-            trace("response data: %s", _sendBuffer);
+//            trace("response data: %s", _sendBuffer);
             _sendBuffer.assign(_sendBuffer.begin() + writedSize, _sendBuffer.end());//写完之后就清空缓冲区
 
             if (_sendBuffer.empty()) {

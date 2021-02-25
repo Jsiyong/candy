@@ -5,6 +5,7 @@
 #include "../../container/controller.h"
 #include "../../log/logger.h"
 #include "../../protocol/json/serialization.h"
+#include "../../util/fileutil.h"
 
 struct HelloWorld {
     int code = 10;
@@ -16,7 +17,7 @@ Serialization(HelloWorld, code, msg, ids)
 
 struct HomeController : public Controller<HomeController> {
 
-    RequestMapping(index, "/home")
+    RequestMapping(index, "/1.png")
     void index(HttpRequest *request, HttpResponse *response) {
         trace("......home controller......");
         for (auto &p : request->getRequestParams()) {
@@ -33,8 +34,11 @@ struct HomeController : public Controller<HomeController> {
         auto jsonObject = Serializable<HelloWorld>::serialize(helloWorld);
         auto resp = JsonParser::parse(jsonObject);
 #endif
-        response->setBody(R"({"hello":"world","my":"name","is":666})");
-        response->setHeader("Content-Type", "application/json; charset=UTF-8");
+//        response->setBody(R"({"hello":"world","my":"name","is":666})");
+//        response->setHeader("Content-Type", "application/json; charset=UTF-8");
+
+        response->setHeader("Content-Type", "application/octet-stream");
+        FileUtil::readFile("/tmp/tmp.mkWXUL9TBY/cmake-build-debug/壁纸-机械.png", response->getBody());
     }
 
 };

@@ -28,9 +28,7 @@ struct HttpBase {
 
     void setHeader(const std::string &key, const std::string &value);
 
-    const std::string &getBody() const;
-
-    void setBody(const std::string &body);
+    std::string &getBody();
 
     virtual void clear();
 

@@ -6,6 +6,7 @@
 #define CANDY_FILEUTIL_H
 
 #include <fcntl.h>
+#include <string>
 
 /**
  * 文件相关工具类
@@ -25,6 +26,16 @@ struct FileUtil {
      * @return
      */
     static int setNonBlock(int fd);
+
+
+    /**
+     * 读取文件到dst中
+     * @param path 路径
+     * @param dst
+     * @return
+     */
+    static bool readFile(const std::string &path, std::string &dst);
+
 };
 
 #endif //CANDY_FILEUTIL_H

@@ -27,12 +27,8 @@ void HttpBase::setHeaders(const std::map<std::string, std::string> &headers) {
     _headers = headers;
 }
 
-const std::string &HttpBase::getBody() const {
+std::string &HttpBase::getBody() {
     return _body;
-}
-
-void HttpBase::setBody(const std::string &body) {
-    _body = body;
 }
 
 void HttpBase::clear() {
