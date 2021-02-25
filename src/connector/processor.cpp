@@ -16,10 +16,11 @@ void SocketProcessor::run() {
             //协议解析
             _request->tryDecode(_recvBuffer);
 
+            //解析完成后清空buf
+            _recvBuffer.clear();
+
             //解析http完成之后，下一步就是回复客户端
-            if (_request->completed()) {
-                //解析完成后清空buf
-                _recvBuffer.clear();
+            if (_request->completed() || !_request->valid()) {
                 //在这里开始处理业务
                 _status = ProcessorStatus::DO_SERVICE;
                 if (_afterReadCompletedRequest) {
@@ -50,7 +51,7 @@ void SocketProcessor::run() {
             trace("start write...");
             size_t writedSize = _channel->write(_sendBuffer);
             trace("response data: %s", _sendBuffer);
-            _sendBuffer.erase(0, writedSize);//写完之后就清空缓冲区
+            _sendBuffer.assign(_sendBuffer.begin() + writedSize, _sendBuffer.end());//写完之后就清空缓冲区
 
             if (_sendBuffer.empty()) {
                 _status = ProcessorStatus::READ_REQUEST;

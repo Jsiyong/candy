@@ -42,6 +42,8 @@ struct HttpRequest : public HttpBase {
 
     bool completed() const;
 
+    bool valid() const;
+
     void clear() override;
 
 private:

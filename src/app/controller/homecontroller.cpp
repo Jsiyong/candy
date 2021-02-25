@@ -25,13 +25,15 @@ struct HomeController : public Controller<HomeController> {
         for (auto &p:request->getHeaders()) {
             trace("[request headers] key: %s, value: %s", p.first, p.second);
         }
-        info("[body size/KB] %lld", request->getBody().size() / 1024);
+        info("[body size] %lld/KB, %lld/B", request->getBody().size() / 1024, request->getBody().size());
 
         //设置回复信息
+#if 0
         HelloWorld helloWorld;
         auto jsonObject = Serializable<HelloWorld>::serialize(helloWorld);
         auto resp = JsonParser::parse(jsonObject);
-        response->setBody(resp);
+#endif
+        response->setBody(R"({"hello":"world","my":"name","is":666})");
         response->setHeader("Content-Type", "application/json; charset=UTF-8");
     }
 

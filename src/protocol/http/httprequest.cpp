@@ -14,7 +14,7 @@
  * Http请求行的状态
  */
 enum DecodeState {
-    INVALID,//无效
+    INVALID = 0,//无效
 
     START,//请求行开始
     METHOD,//请求方法
@@ -180,6 +180,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                     _decodeState = DecodeState::WHEN_CR;
                 } else if (ch == '.') {
                     //遇到版本分割
+                    _version.push_back(ch);
                     _decodeState = DecodeState::VERSION_SPLIT;
                 } else if (isdigit(ch)) {
                     _version.push_back(ch);
@@ -191,6 +192,7 @@ void HttpRequest::tryDecode(const std::string &src) {
             case DecodeState::VERSION_SPLIT: {
                 //遇到版本分割符，字符必须是数字，其他情况都是错误
                 if (isdigit(ch)) {
+                    _version.push_back(ch);
                     _decodeState = DecodeState::VERSION;
                 } else {
                     _decodeState = DecodeState::INVALID;
@@ -324,4 +326,9 @@ bool HttpRequest::completed() const {
 
 HttpRequest::HttpRequest() {
     _decodeState = DecodeState::START;
+}
+
+bool HttpRequest::valid() const {
+    //状态不为无效便是有效
+    return _decodeState != DecodeState::INVALID;
 }

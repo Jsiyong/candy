@@ -8,6 +8,13 @@
 
 #define MAX_EVENT 1024
 #define IP_SIZE 20
+#if 0
+static void *thr_run(void *param) {
+    SocketProcessor *processor = (SocketProcessor *) param;
+    processor->run();
+    pthread_exit(NULL);
+}
+#endif
 
 Poller::Poller() {
 
@@ -36,12 +43,10 @@ void Poller::attach(int fd) {
     });
     //解析到未完整的协议，就重新开启epoll读事件
     socketProcessor->setOnAfterReadUnCompletedRequest([this, fd]() {
-//        info("setOnAfterReadUnCompletedRequest");
         this->updateEvent(fd, EPOLLIN);
     });
     //写完完就开始重新触发读事件
     socketProcessor->setOnAfterWriteCompletedResponse([this, fd]() {
-//        info("setOnAfterWriteCompletedResponse");
         this->updateEvent(fd, EPOLLIN);
     });
     //写不完就继续写
@@ -81,8 +86,16 @@ void *Poller::execEventLoop(void *param) {
                 delete pPoller->_socketProcessors[clifd];
                 pPoller->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
+#if 0
+                pthread_t pid;
+                pthread_attr_t attr;
+                pthread_attr_init(&attr);
+                pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+                pthread_create(&pid, &attr, thr_run, pSocketProcessor);
+#endif
                 //提交任务
                 pPoller->_executor->submit(pSocketProcessor);
+
             }
         }
     }

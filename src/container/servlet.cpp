@@ -8,12 +8,7 @@
 #include "../log/logger.h"
 
 void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
-    trace("[method]%s", request->getMethod());
-    trace("[url]%s", request->getUrl());
-
-    for (auto &p:request->getHeaders()) {
-        trace("[request headers] key: %s, value: %s", p.first, p.second);
-    }
+    trace("[method] %s, [url] %s", request->getMethod(), request->getUrl());
 
     //根据路径获取对应的处理方法
     const std::string &url = request->getUrl();
@@ -23,6 +18,9 @@ void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
         //调用业务处理方法
         event(request, response);
     } else {
+        for (auto &p:request->getHeaders()) {
+            trace("[request headers] key: %s, value: %s", p.first, p.second);
+        }
         //如果没有业务可以处理这个请求，那么请求返回错误
         response->setNotFound();
     }

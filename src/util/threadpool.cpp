@@ -70,7 +70,7 @@ void *ThreadPoolExecutor::processManageWork(void *param) {
         int workThreadNum = pool->_workThreadCount;
         int idleThreadNum = pool->_idleNum;
         pthread_mutex_unlock(&(pool->_mutex));
-        trace("idle num:%d, work threadNum:%d, taskNum:%d", idleThreadNum, workThreadNum, taskNum);
+//        trace("idle num:%d, work threadNum:%d, taskNum:%d", idleThreadNum, workThreadNum, taskNum);
 
         //如果任务数量小于最大线程数且大于空闲线程数，那么就创建
         //最多还能创建的线程数
@@ -79,7 +79,7 @@ void *ThreadPoolExecutor::processManageWork(void *param) {
         int wantCreateNum = taskNum > idleThreadNum ? taskNum - idleThreadNum : 0;
         //计算之后最后能创建的线程数
         int newCreateThreadNum = maxCanCreateNum > wantCreateNum ? wantCreateNum : maxCanCreateNum;
-        trace("newCreateThreadNum:%d", newCreateThreadNum);
+//        trace("newCreateThreadNum:%d", newCreateThreadNum);
         //创建新线程
         for (int i = 0; i < newCreateThreadNum; ++i) {
             pool->createNewWorkThread();
