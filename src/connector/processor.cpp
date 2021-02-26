@@ -47,6 +47,7 @@ void SocketProcessor::run() {
             //注意，不要break，因为做完业务之后就开始写数据了，状态直接就是ProcessorStatus::WRITE_RESPONSE
         }
         case ProcessorStatus::WRITE_RESPONSE: {
+
             //如果是可写事件触发
             trace("start write...");
             size_t writedSize = _channel->write(_sendBuffer);

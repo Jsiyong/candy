@@ -19,7 +19,7 @@ void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
         event(request, response);
     } else {
         for (auto &p:request->getHeaders()) {
-            trace("[request headers] key: %s, value: %s", p.first, p.second);
+            trace("[request headers] %s: %s", p.first, p.second);
         }
         //如果没有业务可以处理这个请求，那么请求返回错误
         response->setNotFound();

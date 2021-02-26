@@ -42,7 +42,7 @@ size_t SocketChannel::read(std::string &dsts) {
     while (true) {
         char buf[MaxReadBuffSize];
 
-        int readSize = ::read(_fd, buf, MaxReadBuffSize);
+        ssize_t readSize = ::read(_fd, buf, MaxReadBuffSize);
         if (0 > readSize) {
             //假错
             if (errno == EINTR) {
@@ -84,7 +84,7 @@ size_t SocketChannel::write(const std::string &srcs) {
     size_t offset = 0;//偏移量
     size_t toWriteSize = srcs.size() - offset;//等待写出的字节大小
     while (toWriteSize > 0) {
-        size_t writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
+        ssize_t writedSize = ::write(_fd, srcs.data() + offset, toWriteSize);
         if (0 > writedSize) {
             //假错
             if (errno == EINTR) {
