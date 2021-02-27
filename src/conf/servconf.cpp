@@ -12,11 +12,11 @@ const std::string &ServerConf::getServerPath() {
     return _serverPath;
 }
 
-std::string ServerConf::getServerName() {
+std::string ServerConf::getServerName() const {
     return _serverPath.substr(_serverPath.rfind('/') + 1);
 }
 
-std::string ServerConf::getServerDir() {
+std::string ServerConf::getServerDir() const {
     return _serverPath.substr(0, _serverPath.rfind('/'));
 }
 
@@ -24,6 +24,7 @@ ServerConf::ServerConf() {
     _port = DEFAULT_SERV_PORT;
     _host = DEFAULT_SERV_ADDR;
     _mode = Mode::FOREGROUND;
+    _webRoot = DEFAULT_WEB_ROOT;
 
     //服务器运行路径
     char servPath[PATH_MAX] = {0};
@@ -49,6 +50,10 @@ int ServerConf::getPort() const {
 
 const std::string &ServerConf::getHost() const {
     return _host;
+}
+
+std::string ServerConf::getWebRoot() const {
+    return getServerDir() + "/" + _webRoot;
 }
 
 struct ServerConf serverConf;

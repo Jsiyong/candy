@@ -6,6 +6,8 @@
 #include "servlet.h"
 #include "../container/controller.h"
 #include "../log/logger.h"
+#include "../util/fileutil.h"
+#include "../conf/servconf.h"
 
 void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
     trace("[method] %s, [url] %s", request->getMethod(), request->getUrl());
@@ -18,10 +20,31 @@ void DispatcherServlet::service(HttpRequest *request, HttpResponse *response) {
         //调用业务处理方法
         event(request, response);
     } else {
-//        for (auto &p:request->getHeaders()) {
-//            trace("[request headers] %s: %s", p.first, p.second);
-//        }
-        //如果没有业务可以处理这个请求，那么请求返回错误
-        response->setNotFound();
+        std::string requestURL = request->getUrl();
+        if (requestURL == "/") {
+            requestURL += "index.html";
+        }
+
+        //找出文件名
+        std::string fileName = requestURL.substr(requestURL.rfind('/') + 1);
+        //找到后缀
+        std::string ext = fileName.substr(fileName.rfind('.') + 1);
+        if (ext == "png") {
+            response->setHeader("Content-Type", "image/png");
+        } else if (ext == "html") {
+            response->setHeader("Content-Type", "text/html");
+        } else if (ext == "jpg") {
+            response->setHeader("Content-Type", "image/jpeg");
+        } else if (ext == "txt") {
+            response->setHeader("Content-Type", "text/plain");
+        }
+
+        requestURL = serverConf.getWebRoot() + requestURL;
+        FileUtil::readFile(requestURL, response->getBody());
+
+
+
+//        //如果没有业务可以处理这个请求，那么请求返回错误
+//        response->setNotFound();
     }
 }

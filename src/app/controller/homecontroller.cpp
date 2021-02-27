@@ -17,7 +17,7 @@ Serialization(HelloWorld, code, msg, ids)
 
 struct HomeController : public Controller<HomeController> {
 
-    RequestMapping(index, "/123.png")
+    RequestMapping(index, "/user/name")
     void index(HttpRequest *request, HttpResponse *response) {
 #if 0
         trace("......home controller......");
@@ -35,8 +35,6 @@ struct HomeController : public Controller<HomeController> {
         auto jsonObject = Serializable<HelloWorld>::serialize(helloWorld);
         auto resp = JsonParser::parse(jsonObject);
 #endif
-        response->setHeader("Content-Type", "image/png");
-        FileUtil::readFile("/tmp/tmp.mkWXUL9TBY/cmake-build-debug/b.png", response->getBody());
     }
 
 };

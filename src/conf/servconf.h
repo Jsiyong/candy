@@ -9,6 +9,7 @@
 
 #define DEFAULT_SERV_PORT 8888
 #define DEFAULT_SERV_ADDR "192.168.66.66"
+#define DEFAULT_WEB_ROOT "webapp"
 
 /**
  * 服务器的配置信息
@@ -32,13 +33,13 @@ struct ServerConf {
      * 获取程序名称
      * @return
      */
-    std::string getServerName();
+    std::string getServerName() const;
 
     /**
      * 获取程序所在的目录
      * @return
      */
-    std::string getServerDir();
+    std::string getServerDir() const;
 
     void setPort(int port);
 
@@ -50,12 +51,15 @@ struct ServerConf {
 
     const std::string &getHost() const;
 
+    std::string getWebRoot() const;
+
 private:
     int _port; //服务器端口
     std::string _host;//服务器的监听地址
     short _mode;//启动模式
 
     std::string _serverPath;//服务器运行路径
+    std::string _webRoot;//对外网站的根路径
 
 };
 
