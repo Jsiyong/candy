@@ -1,0 +1,92 @@
+.file-constructor{
+    pointer-events: all;
+    height:100%;
+    background:rgba(44, 113 ,15,0.38 );
+    border-radius:0 8px 8px 0;
+    position:relative;
+    color: #fff;
+}
+.file-constructor{
+    pointer-events: all;
+    height:100%;
+    background:rgba(44, 113 ,15,0.38);
+    border-radius:0 8px 8px 0;
+    position:relative;
+    color: #fff;
+}
+.file-constructor .el-tree {
+    background: transparent!important;
+    color: inherit;
+    margin:50px 10px;
+    overflow: hidden;
+}
+.file-constructor .el-tree /deep/.el-tree-node:focus>.el-tree-node__content{
+    background-color: transparent;
+}
+.file-constructor .el-tree /deep/.el-tree-node.is-current>.el-tree-node__content{
+    background-color: #62855F;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content{
+    position: relative;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .el-tree-node__expand-icon{
+    color:#fff;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf{
+    color:transparent;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .folder-icn{
+    display: inline-block;
+    background-image: url("../../../images/folder-close.png");
+    background-size: 100% 100%;
+    margin-left: 5px;
+    width: 18px;
+    height: 14px;
+    margin-right: 10px;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .folder-icn.expanded{
+    background-image: url("../../../images/folder-open.png");
+    background-size: 100% 100%;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .folder-icn.is-leaf{
+    opacity: 0;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .opt-icn{
+    position: absolute;
+    right: 5px;
+    top: 3px;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .opt-icn>i{
+    border-radius:50%;
+    color:white;
+    padding: 2px;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .opt-icn>i.el-icon-download {
+    background: #2aa7ad;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .opt-icn>i.el-icon-upload2 {
+    background: #cc698d;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content .opt-icn:hover{
+    filter: drop-shadow(0px 0px 5px #fff);
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content:hover{
+    background-color: #62855F;
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content:hover .opt-icn >i{
+    filter: brightness(1.2);
+}
+.file-constructor .el-tree /deep/.el-tree-node .el-tree-node__content:hover .opt-icn:hover{
+    filter: drop-shadow(0px 0px 5px #fff);
+}
+.file-constructor .expand-icn{
+    background: rgb(98, 133, 95);
+    border-radius: 0 4px 4px 0;
+    color: white;
+    padding: 30px 2px;
+    cursor: pointer;
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translate(100%,-100%);
+}

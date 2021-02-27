@@ -16,7 +16,8 @@ const std::unordered_map<std::string, std::string> HttpResponse::_fileContentTyp
         {"css",  "text/css"},
         {"js",   "application/javascript"},
         {"woff", "application/font-woff"},
-        {"ttf",  "font/ttf"}
+        {"ttf",  "font/ttf"},
+        {"vue",  "text/plain; charset=utf-8"}
 };
 
 void HttpResponse::encode(std::string &dst) {

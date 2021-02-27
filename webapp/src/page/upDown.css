@@ -1,0 +1,18 @@
+.up-down{
+    height: calc(100% - 61px);
+    display: flex;
+}
+.up-down .left{
+    width:20%;
+    transition: all 0.5s;
+}
+.up-down .right{
+    width:80%;
+    transition: all 0.5s;
+}
+.up-down.constructor-hidden .left{
+    width:0;
+}
+.up-down.constructor-hidden .right{
+    width:100%;
+}

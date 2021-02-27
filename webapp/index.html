@@ -1,34 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <link rel="icon" href="images/logo.png"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>candy</title>
     <!-- import element-ui CSS -->
-    <link rel="stylesheet" href="css/element-2.15.1.css">
+    <link rel="stylesheet" href="static/element/element-2.15.1.css">
 
     <!-- import Vue before Element -->
-    <script src="js/vue-2.6.12.js"></script>
+    <script src="static/vue/vue-2.6.12.js"></script>
     <!-- import element-ui JavaScript -->
-    <script src="js/element-2.15.1.js"></script>
+    <script src="static/element/element-2.15.1.js"></script>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <style>
+        body {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
+<iframe src="static/star/star.html" width="100%" height="100%" scrolling="no"></iframe>
 <div id="app">
-    <h1>{{ message }}</h1>
-    <el-button>Button</el-button>
-    <i class="el-icon-edit"></i>
-    <i class="el-icon-share"></i>
-    <i class="el-icon-delete"></i>
-    <el-button type="primary" icon="el-icon-search">搜索</el-button>
+    <com-header></com-header>
+    <up-down></up-down>
 </div>
+</body>
 
+<script type="module">
+    import UpDown from './src/page/UpDown.js'
+    import ComHeader from './src/components/common/ComHeader.component.js'
 
-<script>
     new Vue({
         el: '#app',
         data: {
             message: 'Hello Project Candy'
+        },
+        components: {
+            ComHeader,
+            UpDown
         }
     })
 </script>
-</body>
+
+<style>
+    @import "src/components/common/comHeader.component.css";
+    @import "src/page/upDown.css";
+    @import "src/components/updown/fileConstructor.component.css";
+    @import "src/components/updown/folderContent.component.css";
+
+    #app {
+        font-family: Avenir, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: rgb(245 255 255);
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+</style>
 </html>
