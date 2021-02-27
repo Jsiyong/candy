@@ -42,7 +42,12 @@ void Acceptor::acceptAt(const std::string &host, int port) {
     //监听
     ret = ::listen(_fd, MAX_CLIENT_QUEUE);
     exit_if(ret < 0, "listen error:%s", strerror(errno));
-    trace("app run at http://%s:%d", host, port);
+    trace("\n\n"
+          "#######   #####   #     #  ######   ##   ## \n"
+          "##       #     #  # #   #  #     #    # #   \n"
+          "##       #######  #  #  #  #     #     #    \n"
+          "##       #     #  #   # #  #     #     #    \n"
+          "#######  #     #  #     #  ######      #    run at http://%s:%d\n\n", host, port);
 #if 0
     //设置非阻塞，防止在accept之前客户端发送RST然后出现卡在accept的情况
     FileUtil::setNonBlock(_fd);

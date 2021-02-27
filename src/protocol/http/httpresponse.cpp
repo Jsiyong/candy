@@ -8,6 +8,17 @@
 
 constexpr int MaxStatusLine = 1024;//最大的状态行长度
 
+const std::unordered_map<std::string, std::string> HttpResponse::_fileContentTypeMap = {
+        {"png",  "image/png"},
+        {"html", "text/html; charset=utf-8"},
+        {"jpg",  "image/jpeg"},
+        {"txt",  "text/plain; charset=utf-8"},
+        {"css",  "text/css"},
+        {"js",   "application/javascript"},
+        {"woff", "application/font-woff"},
+        {"ttf",  "font/ttf"}
+};
+
 void HttpResponse::encode(std::string &dst) {
     _version = "1.1";
     _protocol = "HTTP";
@@ -48,4 +59,18 @@ void HttpResponse::clear() {
 HttpResponse::HttpResponse() {
     _statusCode = 200;
     _statusWord.assign("OK");
+}
+
+void HttpResponse::setContentTypeByUri(const std::string &uri) {
+    //找到请求的url的文件名
+    //找出文件名
+    std::string fileName = uri.substr(uri.rfind('/') + 1);
+    //找到后缀
+    std::string ext = fileName.substr(fileName.rfind('.') + 1);
+    if (_fileContentTypeMap.find(ext) != _fileContentTypeMap.end()) {
+        //找得到
+        this->setHeader("Content-Type", _fileContentTypeMap.at(ext));
+    } else {
+        this->setHeader("Content-Type", _fileContentTypeMap.at("txt"));
+    }
 }

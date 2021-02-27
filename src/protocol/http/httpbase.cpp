@@ -23,10 +23,6 @@ const std::map<std::string, std::string> &HttpBase::getHeaders() const {
     return _headers;
 }
 
-void HttpBase::setHeaders(const std::map<std::string, std::string> &headers) {
-    _headers = headers;
-}
-
 std::string &HttpBase::getBody() {
     return _body;
 }

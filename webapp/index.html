@@ -1,10 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <title>candy</title>
+    <!-- import element-ui CSS -->
+    <link rel="stylesheet" href="css/element-2.15.1.css">
+
+    <!-- import Vue before Element -->
+    <script src="js/vue-2.6.12.js"></script>
+    <!-- import element-ui JavaScript -->
+    <script src="js/element-2.15.1.js"></script>
 </head>
 <body>
-<h1>hello world</h1>
+<div id="app">
+    <h1>{{ message }}</h1>
+    <el-button>Button</el-button>
+    <i class="el-icon-edit"></i>
+    <i class="el-icon-share"></i>
+    <i class="el-icon-delete"></i>
+    <el-button type="primary" icon="el-icon-search">搜索</el-button>
+</div>
+
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Project Candy'
+        }
+    })
+</script>
 </body>
 </html>
