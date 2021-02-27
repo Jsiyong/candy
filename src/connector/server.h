@@ -15,7 +15,7 @@ struct Server {
 
     ~Server();
 
-    void startAt(const char *host, unsigned short port);
+    void runAt(const std::string &host, unsigned short port);
 
 private:
 

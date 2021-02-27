@@ -29,12 +29,9 @@ int main(int argc, char **argv) {
     pLogger->addAppender(pLogAppender);
     LogManager::getInstance()->setLogger(pLogger);
 
-    //开始写日志
-    info("log info, server config [port:%d],[addr:%s],[mode:%d]", servConf.port, servConf.host, servConf.mode);
-
     //3:启动服务器
     Server servBase;
-    servBase.startAt(servConf.host, servConf.port);
+    servBase.runAt(serverConf.getHost(), serverConf.getPort());
 
     //挂上清理函数
     atexit(beforeExit);

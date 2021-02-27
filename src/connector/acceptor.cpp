@@ -16,7 +16,7 @@ Acceptor::Acceptor() {
     _poller = new Poller();
 }
 
-void Acceptor::acceptAt(const char *host, int port) {
+void Acceptor::acceptAt(const std::string &host, int port) {
     //服务端监听套接字
     _fd = socket(AF_INET, SOCK_STREAM, 0);
     exit_if(_fd < 0, "socket error:%s", strerror(errno));
@@ -35,14 +35,14 @@ void Acceptor::acceptAt(const char *host, int port) {
     memset(&servAddr, 0, sizeof(struct sockaddr_in));
     servAddr.sin_family = AF_INET;
     servAddr.sin_port = htons(port);
-    inet_pton(AF_INET, host, &servAddr.sin_addr);
+    inet_pton(AF_INET, host.data(), &servAddr.sin_addr);
     ret = ::bind(_fd, (struct sockaddr *) &servAddr, sizeof(servAddr));
     exit_if(ret < 0, "bind error:%s", strerror(errno));
 
     //监听
     ret = ::listen(_fd, MAX_CLIENT_QUEUE);
     exit_if(ret < 0, "listen error:%s", strerror(errno));
-    info("listen success: ip is %s, port is %d", host, port);
+    trace("app run at http://%s:%d", host, port);
 #if 0
     //设置非阻塞，防止在accept之前客户端发送RST然后出现卡在accept的情况
     FileUtil::setNonBlock(_fd);
@@ -53,7 +53,7 @@ void Acceptor::acceptAt(const char *host, int port) {
 }
 
 void Acceptor::acceptLoop() {
-    struct sockaddr_in clientaddr;
+    struct sockaddr_in clientaddr{};
     socklen_t socklen = sizeof(struct sockaddr_in);
     char ip[IP_SIZE] = {0};
     int clientfd = 0;

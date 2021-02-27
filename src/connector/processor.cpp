@@ -42,14 +42,14 @@ void SocketProcessor::run() {
             _response->encode(_sendBuffer);
             _request->clear();//请求数据也没有用了
             _response->clear();//响应报文也没用了
-            //做完业务就开始写数据
+//            //做完业务就开始写数据
             _status = ProcessorStatus::WRITE_RESPONSE;
             //注意，不要break，因为做完业务之后就开始写数据了，状态直接就是ProcessorStatus::WRITE_RESPONSE
         }
         case ProcessorStatus::WRITE_RESPONSE: {
 
             //如果是可写事件触发
-            trace("start write...");
+//            trace("start write...");
             size_t writedSize = _channel->write(_sendBuffer);
 //            trace("response data: %s", _sendBuffer);
             _sendBuffer.assign(_sendBuffer.begin() + writedSize, _sendBuffer.end());//写完之后就清空缓冲区

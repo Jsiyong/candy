@@ -29,13 +29,13 @@ void CmdParser::parse(int argc, char **argv) {
     while ((c = getopt_long(argc, argv, "a:dfhp:", options, NULL)) != -1) {
         switch (c) {
             case 'a':
-                servConf.host = optarg;
+                serverConf.setHost(optarg);
                 break;
             case 'd':
-                servConf.mode = ServMode::DAEMON;
+                serverConf.setMode(ServerConf::Mode::DAEMON);
                 break;
             case 'f':
-                servConf.mode = ServMode::FOREGROUND;
+                serverConf.setMode(ServerConf::Mode::FOREGROUND);
                 break;
             case '?':
             case 'h':
@@ -43,7 +43,7 @@ void CmdParser::parse(int argc, char **argv) {
                 exit(EXIT_SUCCESS);
                 break;
             case 'p':
-                servConf.port = atoi(optarg);
+                serverConf.setPort(atoi(optarg));
                 break;
             default:
                 printf("?? getopt returned character code 0%o ??\n", c);

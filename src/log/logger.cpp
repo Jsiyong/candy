@@ -3,11 +3,7 @@
 //
 
 #include "logger.h"
-#include <unistd.h>
-
-//代表程序的路径，可以通过访问这个路径来获取
-#define CURRENT_EXE_PATH "/proc/self/exe"
-#define PATH_MAX 1024
+#include "../conf/servconf.h"
 
 void Logger::addAppender(LogAppender *appender) {
     _appenderList.push_back(appender);
@@ -33,10 +29,7 @@ void Logger::write(const LoggingEvent &event) {
 }
 
 Logger::Logger() {
-    char buffer[PATH_MAX] = {0};
-    readlink(CURRENT_EXE_PATH, buffer, PATH_MAX);
-    std::string exePath = buffer;
-    _name = exePath.substr(exePath.rfind('/') + 1);
+    _name = serverConf.getServerName();
 }
 
 const std::string &Logger::getName() const {

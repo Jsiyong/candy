@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 project(candy)
 message(STATUS "#### current project ${PROJECT_NAME}")
 set(CMAKE_CXX_STANDARD 11)
+# 设置exe输出路径直接放到项目路径下
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/)
 
 # 遍历目录下所有的.h和.cpp文件
 file(GLOB_RECURSE all_src_files src/*.cpp src/*.h)

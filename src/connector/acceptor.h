@@ -21,7 +21,7 @@ struct Acceptor {
      * @param host
      * @param port
      */
-    void acceptAt(const char *host, int port);
+    void acceptAt(const std::string &host, int port);
 
 private:
 
