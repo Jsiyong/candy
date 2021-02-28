@@ -37,6 +37,15 @@ struct Servlet {
 
 private:
     Servlet *_nextServlet = NULL;
+
+protected:
+
+    /**
+     * 读文件到responsebody中
+     * @param url
+     * @param dsts
+     */
+    bool readFileToResponseBodyByUrl(const std::string &url, HttpResponse *response);
 };
 
 /**

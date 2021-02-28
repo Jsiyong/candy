@@ -23,6 +23,9 @@ const std::unordered_map<std::string, std::string> HttpResponse::_fileContentTyp
 void HttpResponse::encode(std::string &dst) {
     _version = "1.1";
     _protocol = "HTTP";
+    if (_headers.find("Content-Type") == _headers.end()) {
+        this->setHeader("Content-Type", _fileContentTypeMap.at("txt"));
+    }
 
     //先添加请求体长度的请求头
     _headers["Content-Length"] = std::to_string(_body.size());

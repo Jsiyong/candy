@@ -19,7 +19,18 @@ struct HomeController : public Controller<HomeController> {
 
     RequestMapping(index, "/user/name")
     void index(HttpRequest *request, HttpResponse *response) {
+        trace("......home controller......");
+        response->getBody().assign("123456");
+    }
 
+    RequestMapping(home, "/")
+    std::string home(HttpRequest *request, HttpResponse *response) {
+        return "/src/index.html";
+    }
+
+    RequestMapping(name, "/hello")
+    ResponseBody name(HttpRequest *request, HttpResponse *response) {
+        return HelloWorld();
     }
 
 };
