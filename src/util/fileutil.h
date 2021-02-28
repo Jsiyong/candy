@@ -36,6 +36,20 @@ struct FileUtil {
      */
     static bool readFile(const std::string &path, std::string &dst);
 
+    /**
+     * 判断文件是否存在
+     * @param path
+     * @return
+     */
+    static bool isExists(const std::string &path);
+
+    /**
+     * 判断文件是不是常规文件
+     * @param path
+     * @return
+     */
+    static bool isRegularFile(const std::string &path);
+
 };
 
 #endif //CANDY_FILEUTIL_H

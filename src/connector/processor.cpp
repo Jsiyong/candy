@@ -37,7 +37,7 @@ void SocketProcessor::run() {
         case ProcessorStatus::DO_SERVICE: {
             //开始做业务
             //做业务
-            _servlet->service(_request, _response);
+            _pipeline->getServlet()->doService(_request, _response);
             //做完业务开始http回复报文的编码，将数据读取到发送缓冲区中
             _response->encode(_sendBuffer);
             _request->clear();//请求数据也没有用了
@@ -75,7 +75,7 @@ SocketProcessor::SocketProcessor(int fd) {
     _request = new HttpRequest();
     _response = new HttpResponse();
 
-    _servlet = new DispatcherServlet();
+    _pipeline = new Pipeline();
 }
 
 SocketProcessor::~SocketProcessor() {

@@ -4,6 +4,8 @@
 
 #include "fileutil.h"
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "../log/logger.h"
 #include "./guard.h"
 
@@ -40,4 +42,22 @@ bool FileUtil::readFile(const std::string &path, std::string &dst) {
     dst.resize(len, '\0');
     fread((char *) dst.data(), 1, len, pFile);
     return true;
+}
+
+bool FileUtil::isExists(const std::string &path) {
+    int ret = access(path.c_str(), F_OK);
+    error_if(ret != 0, "access[%s] error: %s", path, strerror(errno));
+    return ret == 0;
+}
+
+bool FileUtil::isRegularFile(const std::string &path) {
+    struct stat buf{0};
+    //获取文件信息，把信息放到buf中
+    int ret = stat(path.c_str(), &buf);
+    if (ret < 0) {
+        error("stat[%s] error: %s", path, strerror(errno));
+        return false;
+    }
+    //若输入的文件路径是普通文件
+    return S_ISREG(buf.st_mode);
 }

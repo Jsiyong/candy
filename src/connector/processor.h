@@ -8,8 +8,8 @@
 #include "channel.h"
 #include "../util/threadpool.h"
 #include "../protocol/http/httprequest.h"
-#include "../container/servlet.h"
 #include "../protocol/http/httpresponse.h"
+#include "../container/pipeline.h"
 
 /**
  * socket处理器的状态机
@@ -56,7 +56,7 @@ private:
     std::string _recvBuffer;//接受缓冲区
     std::string _sendBuffer;//发送缓冲区
 
-    Servlet *_servlet = NULL;//用户应用
+    Pipeline *_pipeline = NULL;//请求处理
 
     //回调函数
     std::function<void(void)> _afterReadCompletedRequest;//在读到完整请求之后

@@ -19,22 +19,7 @@ struct HomeController : public Controller<HomeController> {
 
     RequestMapping(index, "/user/name")
     void index(HttpRequest *request, HttpResponse *response) {
-#if 0
-        trace("......home controller......");
-        for (auto &p : request->getRequestParams()) {
-            trace("[request params] %s: %s", p.first, p.second);
-        }
-        for (auto &p:request->getHeaders()) {
-            trace("[request headers] %s: %s", p.first, p.second);
-        }
-//        info("[body size] %lld/KB, %lld/B", request->getBody().size() / 1024, request->getBody().size());
 
-        //设置回复信息
-
-        HelloWorld helloWorld;
-        auto jsonObject = Serializable<HelloWorld>::serialize(helloWorld);
-        auto resp = JsonParser::parse(jsonObject);
-#endif
     }
 
 };
