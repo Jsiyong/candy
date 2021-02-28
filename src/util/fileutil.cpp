@@ -28,7 +28,7 @@ bool FileUtil::readFile(const std::string &path, std::string &dst) {
     //先以读形式打开文件
     FILE *pFile = fopen(path.c_str(), "rb");
     if (!pFile) {
-        error("fopen[] error: %s", path, strerror(errno));
+        error("fopen[%s] error: %s", path, strerror(errno));
         return false;
     }
     ExitCaller caller([=]() { fclose(pFile); });
