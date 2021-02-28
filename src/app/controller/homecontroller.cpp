@@ -4,7 +4,6 @@
 
 #include "../../container/controller.h"
 #include "../../log/logger.h"
-#include "../../protocol/json/serialization.h"
 #include "../../util/fileutil.h"
 
 struct HelloWorld {
@@ -25,7 +24,7 @@ struct HomeController : public Controller<HomeController> {
 
     RequestMapping(home, "/")
     std::string home(HttpRequest *request, HttpResponse *response) {
-        return "/src/index.html";
+        return "/index.html";
     }
 
     RequestMapping(name, "/hello")

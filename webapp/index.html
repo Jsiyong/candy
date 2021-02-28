@@ -3,17 +3,17 @@
 <head>
 
     <meta charset="UTF-8">
-    <link rel="icon" href="./assets/logo.png"/>
+    <link rel="icon" href="src/assets/logo.png"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>candy</title>
     <!-- import element-ui CSS -->
-    <link rel="stylesheet" href="../static/lib/element/element-2.15.1.css">
+    <link rel="stylesheet" href="static/lib/element/element-2.15.1.css">
 
     <!-- import Vue before Element -->
-    <script src="../static/lib/vue/vue-2.6.12.js"></script>
+    <script src="static/lib/vue/vue-2.6.12.js"></script>
     <!-- import element-ui JavaScript -->
-    <script src="../static/lib/element/element-2.15.1.js"></script>
-    <script src="../static/lib/httpVueLoader.js"></script>
+    <script src="static/lib/element/element-2.15.1.js"></script>
+    <script src="static/lib/httpVueLoader.js"></script>
     <style>
         body {
             position: absolute;
@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-<iframe src="../static/star/star.html" width="100%" height="100%" scrolling="no"></iframe>
+<iframe src="static/star/star.html" width="100%" height="100%" scrolling="no"></iframe>
 <div id="app">
     <com-header></com-header>
     <up-down></up-down>
@@ -40,8 +40,8 @@
             message: 'Hello Project Candy'
         },
         components: {
-            'com-header': httpVueLoader('./components/common/ComHeader.component.vue'),
-            'up-down': httpVueLoader('./page/UpDown.vue')
+            'com-header': httpVueLoader('src/components/common/ComHeader.component.vue'),
+            'up-down': httpVueLoader('src/page/UpDown.vue')
         }
     })
 </script>
