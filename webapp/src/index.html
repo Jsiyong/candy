@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <link rel="icon" href="images/logo.png"/>
+    <link rel="icon" href="./assets/logo.png"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>candy</title>
     <!-- import element-ui CSS -->
-    <link rel="stylesheet" href="static/element/element-2.15.1.css">
+    <link rel="stylesheet" href="../static/lib/element/element-2.15.1.css">
 
     <!-- import Vue before Element -->
-    <script src="static/vue/vue-2.6.12.js"></script>
+    <script src="../static/lib/vue/vue-2.6.12.js"></script>
     <!-- import element-ui JavaScript -->
-    <script src="static/element/element-2.15.1.js"></script>
-    <link rel="stylesheet" type="text/css" href="index.css">
+    <script src="../static/lib/element/element-2.15.1.js"></script>
+    <script src="../static/lib/httpVueLoader.js"></script>
     <style>
         body {
             position: absolute;
@@ -26,35 +27,26 @@
     </style>
 </head>
 <body>
-<iframe src="static/star/star.html" width="100%" height="100%" scrolling="no"></iframe>
+<iframe src="../static/star/star.html" width="100%" height="100%" scrolling="no"></iframe>
 <div id="app">
     <com-header></com-header>
     <up-down></up-down>
 </div>
 </body>
-
 <script type="module">
-    import UpDown from './src/page/UpDown.js'
-    import ComHeader from './src/components/common/ComHeader.component.js'
-
     new Vue({
         el: '#app',
         data: {
             message: 'Hello Project Candy'
         },
         components: {
-            ComHeader,
-            UpDown
+            'com-header': httpVueLoader('./components/common/ComHeader.component.vue'),
+            'up-down': httpVueLoader('./page/UpDown.vue')
         }
     })
 </script>
 
 <style>
-    @import "src/components/common/comHeader.component.css";
-    @import "src/page/upDown.css";
-    @import "src/components/updown/fileConstructor.component.css";
-    @import "src/components/updown/folderContent.component.css";
-
     #app {
         font-family: Avenir, Helvetica, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
