@@ -38,24 +38,29 @@ void Poller::attach(int fd) {
     //封装为socketProcessor
     SocketProcessor *socketProcessor = new SocketProcessor(fd);
     //解析完协议之后，就需要开启epoll的写事件,
-    socketProcessor->setOnAfterReadCompletedRequest([this, fd]() {
+    socketProcessor->setOnAfterReadCompletedRequest([=]() {
         this->updateEvent(fd, EPOLLOUT);
     });
     //解析到未完整的协议，就重新开启epoll读事件
-    socketProcessor->setOnAfterReadUnCompletedRequest([this, fd]() {
+    socketProcessor->setOnAfterReadUnCompletedRequest([=]() {
         this->updateEvent(fd, EPOLLIN);
     });
     //写完完就开始重新触发读事件
-    socketProcessor->setOnAfterWriteCompletedResponse([this, fd]() {
+    socketProcessor->setOnAfterWriteCompletedResponse([=]() {
         this->updateEvent(fd, EPOLLIN);
+        trace("update fd[%d]", fd);
     });
     //写不完就继续写
-    socketProcessor->setOnAfterWriteUnCompletedResponse([this, fd]() {
+    socketProcessor->setOnAfterWriteUnCompletedResponse([=]() {
         this->updateEvent(fd, EPOLLOUT);
     });
 
     //TODO 需要加锁
-    _socketProcessors.insert(std::make_pair(fd, socketProcessor));
+//    _socketProcessors.insert(std::make_pair(fd, socketProcessor));
+
+    pthread_mutex_lock(&_mutex);
+    _socketProcessors.emplace(fd, socketProcessor);
+    pthread_mutex_unlock(&_mutex);
     info("add new clieant[%d], current client num: %d, map size: %d", fd, clientNum, _socketProcessors.size());
 
     //添加事件
@@ -75,16 +80,32 @@ void *Poller::execEventLoop(void *param) {
         exit_if(eventCount == -1 && errno != EINTR, "epoll_wait error:%s", strerror(errno));
         //处理每一个事件
         for (int i = 0; i < eventCount; ++i) {
-            SocketProcessor *pSocketProcessor = pPoller->_socketProcessors[events[i].data.fd];
+            pthread_mutex_lock(&pPoller->_mutex);
+            auto item = pPoller->_socketProcessors.find(events[i].data.fd);
+#if 0
+            if (item == pPoller->_socketProcessors.end()) {
+                //TODO 不知道什么原因，会出现这种情况
+                error("find error processor[fd: %d]", events[i].data.fd);
+                close(events[i].data.fd);
+                continue;
+            }
+#endif
+            SocketProcessor *pSocketProcessor = item->second;
+            pthread_mutex_unlock(&pPoller->_mutex);
             //先判断是不是有异常情况，是不是断开了连接等等，异常了直接移除这个socket，否则才提交线程池处理
             if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
                 int clifd = pSocketProcessor->getChannel()->fd();
                 error("client[%d] disconnected..", clifd);
                 pPoller->removeEvent(clifd);
                 close(clifd);
+
                 //记得删掉指针
-                delete pPoller->_socketProcessors[clifd];
+                delete pSocketProcessor;
+                pthread_mutex_lock(&pPoller->_mutex);
                 pPoller->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
+                pthread_mutex_unlock(&pPoller->_mutex);
+
+                error("client[%d] deleted..", clifd);
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
 #if 0
                 pthread_t pid;
