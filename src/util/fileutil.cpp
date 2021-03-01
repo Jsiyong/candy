@@ -55,7 +55,7 @@ bool FileUtil::isRegularFile(const std::string &path) {
     //获取文件信息，把信息放到buf中
     int ret = stat(path.c_str(), &buf);
     if (ret < 0) {
-        error("stat[%s] error: %s", path, strerror(errno));
+//        error("stat[%s] error: %s", path, strerror(errno));
         return false;
     }
     //若输入的文件路径是普通文件

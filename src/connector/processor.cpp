@@ -12,6 +12,9 @@ void SocketProcessor::run() {
             //如果事件的fd不是监听的fd，说明有读写事件发生，由于是边缘非阻塞，所以需要注意要一次性读完缓冲区的所有数据
             //客户端的读事件产生，读到recvBuffer中
             _channel->read(_recvBuffer);
+            if (_channel->close()) {
+                break;
+            }
 
             //协议解析
             _request->tryDecode(_recvBuffer);
@@ -82,6 +85,7 @@ SocketProcessor::~SocketProcessor() {
     delete _channel;
     delete _request;
     delete _response;
+    delete _pipeline;
 }
 
 SocketChannel *SocketProcessor::getChannel() const {

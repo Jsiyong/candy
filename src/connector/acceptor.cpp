@@ -25,7 +25,10 @@ void Acceptor::acceptAt(const std::string &host, int port) {
     int val = 1;
     int ret = setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     exit_if(ret < 0, "setsockopt set SO_REUSEADDR error:%s", strerror(errno));
-
+#if 0
+    struct linger linger = {1, 0};//立即关掉，缓冲区数据也不要了
+    setsockopt(_fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
+#endif
     //设置fork exec自动close
     ret = FileUtil::addFlag2Fd(_fd, FD_CLOEXEC);
     exit_if(ret < 0, "addFlag2Fd FD_CLOEXEC error:%s", strerror(errno));

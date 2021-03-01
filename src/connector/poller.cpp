@@ -8,13 +8,6 @@
 
 #define MAX_EVENT 1024
 #define IP_SIZE 20
-#if 0
-static void *thr_run(void *param) {
-    SocketProcessor *processor = (SocketProcessor *) param;
-    processor->run();
-    pthread_exit(NULL);
-}
-#endif
 
 Poller::Poller() {
 
@@ -32,8 +25,6 @@ Poller::Poller() {
 }
 
 void Poller::attach(int fd) {
-    static int clientNum = 0;
-    clientNum++;
     //找到一块空的地方放
     //封装为socketProcessor
     SocketProcessor *socketProcessor = new SocketProcessor(fd);
@@ -48,20 +39,20 @@ void Poller::attach(int fd) {
     //写完完就开始重新触发读事件
     socketProcessor->setOnAfterWriteCompletedResponse([=]() {
         this->updateEvent(fd, EPOLLIN);
-        trace("update fd[%d]", fd);
     });
     //写不完就继续写
     socketProcessor->setOnAfterWriteUnCompletedResponse([=]() {
         this->updateEvent(fd, EPOLLOUT);
     });
 
-    //TODO 需要加锁
-//    _socketProcessors.insert(std::make_pair(fd, socketProcessor));
-
+    //需要加锁
     pthread_mutex_lock(&_mutex);
-    _socketProcessors.emplace(fd, socketProcessor);
+    if (!_socketProcessors.emplace(fd, socketProcessor).second) {
+        error("socketProcessors emplace error");
+    }
     pthread_mutex_unlock(&_mutex);
-    info("add new clieant[%d], current client num: %d, map size: %d", fd, clientNum, _socketProcessors.size());
+
+    info("add new clieant[%d], map size: %d", fd, _socketProcessors.size());
 
     //添加事件
     this->addEvent(fd);
@@ -82,41 +73,35 @@ void *Poller::execEventLoop(void *param) {
         for (int i = 0; i < eventCount; ++i) {
             pthread_mutex_lock(&pPoller->_mutex);
             auto item = pPoller->_socketProcessors.find(events[i].data.fd);
-#if 0
+
             if (item == pPoller->_socketProcessors.end()) {
                 //TODO 不知道什么原因，会出现这种情况
                 error("find error processor[fd: %d]", events[i].data.fd);
-                close(events[i].data.fd);
-                continue;
             }
-#endif
+
             SocketProcessor *pSocketProcessor = item->second;
             pthread_mutex_unlock(&pPoller->_mutex);
             //先判断是不是有异常情况，是不是断开了连接等等，异常了直接移除这个socket，否则才提交线程池处理
             if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
+
                 int clifd = pSocketProcessor->getChannel()->fd();
-                error("client[%d] disconnected..", clifd);
-                pPoller->removeEvent(clifd);
-                close(clifd);
 
                 //记得删掉指针
                 delete pSocketProcessor;
+
                 pthread_mutex_lock(&pPoller->_mutex);
                 pPoller->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
                 pthread_mutex_unlock(&pPoller->_mutex);
 
-                error("client[%d] deleted..", clifd);
+                //注意，close事件要放到erase之后，避免close之后的瞬间客户端又用这个fd建立起新的连接，并且发生数据
+                //如果是这样的话，那时候如果还没erase,但是客户端却发来了连接建立的请求，而且发送了数据来。但是来了之后可能这个线程又erase了
+                //就会奔溃
+                pPoller->removeEvent(clifd);
+
+                error("client[%d] disconnected..", clifd);
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
-#if 0
-                pthread_t pid;
-                pthread_attr_t attr;
-                pthread_attr_init(&attr);
-                pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-                pthread_create(&pid, &attr, thr_run, pSocketProcessor);
-#endif
                 //提交任务
                 pPoller->_executor->submit(pSocketProcessor);
-
             }
         }
     }
@@ -126,22 +111,6 @@ Poller::~Poller() {
     _exit = true;
     pthread_join(_threadId, NULL);
     pthread_mutex_destroy(&_mutex);
-}
-
-void Poller::removeChannelInternal(SocketChannel *channel) {
-#if 0
-    //从epoll树上删除
-    int clifd = channel->fd();
-    epoll_ctl(_epfd, EPOLL_CTL_DEL, clifd, NULL);
-    _channels.remove(channel);
-
-    info("epoll ctl delete");
-    trace("client disconnected.ip:%s, port:%d,current client num:%d", channel->getHost(), channel->getPort(),
-          _channels.size() - 1);
-
-    //删除节点的内存
-    delete channel;
-#endif
 }
 
 void Poller::addEvent(int fd) {
@@ -175,5 +144,7 @@ void Poller::updateEvent(int fd, uint32_t events) {
 void Poller::removeEvent(int fd) {
     int ret = epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
     exit_if(ret < 0, "epoll_ctl del error:%s", strerror(errno));
+    //关了之后顺便把fd也关闭了
+    close(fd);
 }
 

@@ -32,7 +32,6 @@ SocketChannel::SocketChannel(int fd) : _fd(fd) {
 
 SocketChannel::~SocketChannel() {
     _close = true;
-//    close(_fd);
 }
 
 size_t SocketChannel::read(std::string &dsts) {
