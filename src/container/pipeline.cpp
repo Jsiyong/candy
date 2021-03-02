@@ -22,10 +22,13 @@ Pipeline::Pipeline() {
 
 Pipeline::~Pipeline() {
     //循环删除责任链
-    auto nextToDelete = _servlet;
-    while (nextToDelete != NULL) {
-        delete nextToDelete;
-        nextToDelete = nextToDelete->getNextServlet();
+    Servlet *pre = NULL;//上一个删除的节点
+    Servlet *next = _servlet;//下一个需要被删除的节点
+    while (next != NULL) {
+        pre = next;
+        next = next->getNextServlet();
+        delete pre;
     }
+    _servlet = NULL;
 }
 
