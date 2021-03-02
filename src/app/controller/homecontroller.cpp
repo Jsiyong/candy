@@ -31,5 +31,4 @@ struct HomeController : public Controller<HomeController> {
     ResponseBody name(HttpRequest *request, HttpResponse *response) {
         return HelloWorld();
     }
-
 };
