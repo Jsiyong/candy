@@ -98,7 +98,7 @@ void *Poller::execEventLoop(void *param) {
                 //就会奔溃
                 pPoller->removeEvent(clifd);
 
-                error("client[%d] disconnected..", clifd);
+                trace("client[%d] disconnected..", clifd);
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
                 //提交任务
                 pPoller->_executor->submit(pSocketProcessor);
