@@ -116,7 +116,7 @@ void ThreadPoolExecutor::createNewWorkThread() {
     ret = pthread_create(&pid, &attr, &ThreadPoolExecutor::processTask, this);
     exit_if(ret != 0, "pthread_create error:%s", strerror(ret));
 
-    trace("create a new thread. workThreadNum:%d, taskNum:%d", _workThreadCount, _tasks.size());
+    trace("create a new thread. workThreadNum:%d", _workThreadCount);
 }
 
 bool ThreadPoolExecutor::isNeeded2CancelWorkThread(int taskNum, int workThreadNum, int idleThreadNum) {
