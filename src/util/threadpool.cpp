@@ -4,7 +4,9 @@
 #include "threadpool.h"
 #include "../log/logger.h"
 #include <unistd.h>
+#include <sys/time.h>
 
+#if 0
 ThreadPoolExecutor::ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeout) {
     _coreNum = coreNum;
     _maxNum = maxNum;
@@ -145,4 +147,132 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
 
 Runnable::~Runnable() {
 
+}
+#endif
+
+
+ThreadPoolExecutor::ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeout) {
+    _coreNum = coreNum;
+    _maxNum = maxNum;
+    _expiryTimeout = expiryTimeout;
+
+    //变量初始化
+    pthread_mutex_init(&_mutex, NULL);
+}
+
+void ThreadPoolExecutor::submit(Runnable *task) {
+    pthread_mutex_lock(&_mutex);
+    //判断是不是有线程，没有的话就创一个
+    if (_allThreads.empty()) {
+        startThread(task);
+
+        pthread_mutex_unlock(&_mutex);//记得解锁
+        return;
+    }
+    //判断是不是有空闲线程，有的话就直接传给这个线程，唤醒它工作
+    if (!_waitingThreads.empty()) {
+        ExecutorThread *waitingThread = _waitingThreads.front();
+        waitingThread->runnable = task;//这个任务就给它做了
+        _waitingThreads.pop_front();//移除出等待队列
+
+        pthread_mutex_unlock(&_mutex);//记得解锁
+        //唤醒这个线程做任务了
+        pthread_cond_signal(&waitingThread->runnableReady);
+        return;
+    }
+
+    //如果没有线程可用了，而且线程数小于配置的最大线程数，那么就创建一个线程来用
+    if (_allThreads.size() < _maxNum) {
+        startThread(task);
+
+        pthread_mutex_unlock(&_mutex);//记得解锁
+        return;
+    }
+
+    //下面的情况是不能创建新的线程的，就将任务加入等待队列中，让所有的线程去抢这个任务
+    _tasks.push_back(task);
+
+    pthread_mutex_unlock(&_mutex);//记得解锁
+}
+
+void ThreadPoolExecutor::startThread(Runnable *task) {
+
+    pthread_attr_t attr;
+    auto pThread = new ExecutorThread(this);
+    pThread->runnable = task;//先加入任务，避免创建线程的时候就开始操作任务了，但是任务却没有加上去
+
+    //设置线程分离属性
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&pThread->tid, &attr, &ExecutorThread::run, task);
+
+    //加入一个线程
+    _allThreads.emplace(pThread);
+}
+
+ThreadPoolExecutor::~ThreadPoolExecutor() {
+}
+
+bool ThreadPoolExecutor::tooManyThreads() {
+    //如果等待线程数大于任务数，并且线程数比核心线程数多，那么就是太多线程了
+    return _waitingThreads.size() > _tasks.size() && _allThreads.size() > _coreNum;
+}
+
+void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
+    auto _this = (ExecutorThread *) param;
+
+    for (;;) {
+        Runnable *task = _this->runnable;//这个不用加锁，因为前面已经保证会加入这个任务再创建这个线程
+        _this->runnable = NULL;
+
+        do {
+
+            task->run();//开始运行任务
+
+
+            pthread_mutex_lock(&_this->_manager->_mutex);
+
+            //判断线程数是不是太多了，是的话就准备失效这个线程
+            if (_this->_manager->tooManyThreads()) {
+                //当前线程数太多了，当前线程得准备跑路了
+                break;
+            }
+            //没有任务做了，后面需要放到等待队列里面
+            if (_this->_manager->_tasks.empty()) {
+                break;
+            }
+            //有任务做，就开始取下一个任务做
+            //取出队首任务，开始做下一个任务
+            task = _this->_manager->_tasks.front();
+            _this->_manager->_tasks.pop_front();//记得出队
+        } while (true);
+        //判断是不是线程太多了，太多了就放入等待队列里面，并且等待一定的时间直到过期
+        //如果线程没有太多，那么就无限等待，直到有任务来
+        //放入等待队列中
+        _this->_manager->_waitingThreads.push_back(_this);
+        if (_this->_manager->tooManyThreads()) {
+            struct timeval now{};//当前时间
+            struct timespec timespec{};//超时时间
+            gettimeofday(&now, NULL);
+            timespec.tv_sec = now.tv_sec + _this->_manager->_expiryTimeout;
+            timespec.tv_nsec = now.tv_usec * 1000;
+            if (0 != pthread_cond_timedwait(&_this->runnableReady, &_this->_manager->_mutex, &timespec)) {
+                //若时间到了，超时了，就直接移除掉这个指针，结束当前线程
+                _this->_manager->_waitingThreads.remove(_this);
+                _this->_manager->_allThreads.erase(_this);
+                break;
+            }
+        } else {
+            pthread_cond_wait(&_this->runnableReady, &_this->_manager->_mutex);
+            //等到了，就继续跑，没等到，就一直阻塞
+        }
+        pthread_mutex_unlock(&_this->_manager->_mutex);//记得解锁
+    }
+
+    pthread_exit(NULL);
+}
+
+ThreadPoolExecutor::ExecutorThread::ExecutorThread(ThreadPoolExecutor *manager) : _manager(manager) {
+    //初始化条件变量
+    pthread_cond_init(&runnableReady, NULL);
 }

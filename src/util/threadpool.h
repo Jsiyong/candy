@@ -9,6 +9,7 @@
 #include <set>
 #include <pthread.h>
 
+#if 0
 /**
  * 接口
  */
@@ -82,9 +83,80 @@ private:
 
     pthread_mutex_t _mutex;//_tasks的互斥锁
     pthread_cond_t _cond;//条件变量
+};
+
+#endif
+
+/**
+ * 接口
+ */
+struct Runnable {
+    virtual ~Runnable() = default;
+
+    virtual void run() = 0;
+};
+
+/**
+ * 线程池
+ */
+struct ThreadPoolExecutor {
 
 
+    ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeout);
 
+    ~ThreadPoolExecutor();
+
+    /**
+     * 提交一个任务
+     * @param task
+     */
+    void submit(Runnable *task);
+
+private:
+    /**
+     * 执行的线程
+     */
+    struct ExecutorThread {
+        explicit ExecutorThread(ThreadPoolExecutor *manager);
+
+        static void *run(void *param);
+
+        pthread_cond_t runnableReady;//条件变量
+
+        pthread_t tid = 0;//当前的线程的id
+
+        Runnable *runnable = NULL;//创建这个线程时初始化的任务
+    private:
+        //管理者对象
+        ThreadPoolExecutor *_manager = NULL;
+    };
+
+    //创建一个新的工作线程
+    void startThread(Runnable *task);
+
+    /**
+     * 是不是线程太多了，需要清理了
+     * @return
+     */
+    bool tooManyThreads();
+
+private:
+
+    bool _exit = false;//线程池是否退出
+
+    int _maxNum = 0;//线程池最大数量
+    int _coreNum = 0;//线程池最小数量[核心线程数]
+    int _expiryTimeout = 0;//失效的时间
+
+    ///////////
+    pthread_mutex_t _mutex;//临界资源的互斥锁
+    //临界资源
+    //////////////////////////////////////////////
+    std::set<ExecutorThread *> _allThreads;//存放所有的线程
+    std::list<ExecutorThread *> _waitingThreads;//等待工作的线程
+    std::list<Runnable *> _tasks;//一个个的任务
+    //////////////////////////////////////////////
+    ///////////
 };
 
 #endif //CANDY_THREADPOOL_H
