@@ -20,4 +20,28 @@ private:
     std::function<void()> _functor;
 };
 
+/**
+ * 互斥锁的保护措施
+ */
+struct MutexLocker {
+
+    explicit MutexLocker(pthread_mutex_t *mutex);
+
+    ~MutexLocker();
+
+    /**
+     * 解锁
+     */
+    void unlock();
+
+    /**
+     * 重新锁上
+     */
+    void relock();
+
+private:
+    bool _lock;
+    pthread_mutex_t *_mutex = NULL;
+};
+
 #endif //CANDY_GUARD_H

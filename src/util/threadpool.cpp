@@ -3,6 +3,7 @@
 //
 #include "threadpool.h"
 #include "../log/logger.h"
+#include "guard.h"
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -161,12 +162,13 @@ ThreadPoolExecutor::ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeou
 }
 
 void ThreadPoolExecutor::submit(Runnable *task) {
-    pthread_mutex_lock(&_mutex);
+
+    MutexLocker locker(&_mutex);
+    trace("current thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(), _waitingThreads.size(),
+          _tasks.size());
     //判断是不是有线程，没有的话就创一个
     if (_allThreads.empty()) {
         startThread(task);
-
-        pthread_mutex_unlock(&_mutex);//记得解锁
         return;
     }
     //判断是不是有空闲线程，有的话就直接传给这个线程，唤醒它工作
@@ -174,8 +176,6 @@ void ThreadPoolExecutor::submit(Runnable *task) {
         ExecutorThread *waitingThread = _waitingThreads.front();
         waitingThread->runnable = task;//这个任务就给它做了
         _waitingThreads.pop_front();//移除出等待队列
-
-        pthread_mutex_unlock(&_mutex);//记得解锁
         //唤醒这个线程做任务了
         pthread_cond_signal(&waitingThread->runnableReady);
         return;
@@ -184,15 +184,11 @@ void ThreadPoolExecutor::submit(Runnable *task) {
     //如果没有线程可用了，而且线程数小于配置的最大线程数，那么就创建一个线程来用
     if (_allThreads.size() < _maxNum) {
         startThread(task);
-
-        pthread_mutex_unlock(&_mutex);//记得解锁
         return;
     }
 
     //下面的情况是不能创建新的线程的，就将任务加入等待队列中，让所有的线程去抢这个任务
     _tasks.push_back(task);
-
-    pthread_mutex_unlock(&_mutex);//记得解锁
 }
 
 void ThreadPoolExecutor::startThread(Runnable *task) {
@@ -204,13 +200,28 @@ void ThreadPoolExecutor::startThread(Runnable *task) {
     //设置线程分离属性
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&pThread->tid, &attr, &ExecutorThread::run, task);
+    pthread_create(&pThread->tid, &attr, &ExecutorThread::run, pThread);
 
     //加入一个线程
     _allThreads.emplace(pThread);
+    trace("start a new thread, thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(),
+          _waitingThreads.size(), _tasks.size());
 }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {
+    _exit = true;
+    //确保所有的线程都已经释放完毕
+    int threadNum = 0;
+    do {
+        usleep(20);
+
+        MutexLocker locker(&_mutex);
+        threadNum = _allThreads.size();
+        for (auto thread:_allThreads) {
+            pthread_cond_signal(&thread->runnableReady);
+        }
+    } while (threadNum > 0);
+    trace("threadpool deleted!!");
 }
 
 bool ThreadPoolExecutor::tooManyThreads() {
@@ -221,16 +232,20 @@ bool ThreadPoolExecutor::tooManyThreads() {
 void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
     auto _this = (ExecutorThread *) param;
 
-    for (;;) {
+    MutexLocker locker(&_this->_manager->_mutex);
+    //当线程没有退出，就继续运行
+    while (!_this->_manager->_exit) {
         Runnable *task = _this->runnable;//这个不用加锁，因为前面已经保证会加入这个任务再创建这个线程
         _this->runnable = NULL;
 
+        pthread_mutex_unlock(&_this->_manager->_mutex);//记得解锁
+
         do {
+            locker.unlock();
 
             task->run();//开始运行任务
 
-
-            pthread_mutex_lock(&_this->_manager->_mutex);
+            locker.relock();//重新锁上
 
             //判断线程数是不是太多了，是的话就准备失效这个线程
             if (_this->_manager->tooManyThreads()) {
@@ -256,18 +271,25 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
             gettimeofday(&now, NULL);
             timespec.tv_sec = now.tv_sec + _this->_manager->_expiryTimeout;
             timespec.tv_nsec = now.tv_usec * 1000;
+            //等待超时
             if (0 != pthread_cond_timedwait(&_this->runnableReady, &_this->_manager->_mutex, &timespec)) {
                 //若时间到了，超时了，就直接移除掉这个指针，结束当前线程
-                _this->_manager->_waitingThreads.remove(_this);
-                _this->_manager->_allThreads.erase(_this);
                 break;
             }
         } else {
             pthread_cond_wait(&_this->runnableReady, &_this->_manager->_mutex);
             //等到了，就继续跑，没等到，就一直阻塞
         }
-        pthread_mutex_unlock(&_this->_manager->_mutex);//记得解锁
     }
+
+    //线程退出前，清理空间
+    _this->_manager->_waitingThreads.remove(_this);
+    _this->_manager->_allThreads.erase(_this);
+    //删除这个对象
+    delete _this;
+
+    trace("release a thread, thread_num[%d], waiting_num[%d], task_num[%d]", _this->_manager->_allThreads.size(),
+          _this->_manager->_waitingThreads.size(), _this->_manager->_tasks.size());
 
     pthread_exit(NULL);
 }
