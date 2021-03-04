@@ -238,8 +238,6 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
         Runnable *task = _this->runnable;//这个不用加锁，因为前面已经保证会加入这个任务再创建这个线程
         _this->runnable = NULL;
 
-        pthread_mutex_unlock(&_this->_manager->_mutex);//记得解锁
-
         do {
             locker.unlock();
 
@@ -264,8 +262,9 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
         //判断是不是线程太多了，太多了就放入等待队列里面，并且等待一定的时间直到过期
         //如果线程没有太多，那么就无限等待，直到有任务来
         //放入等待队列中
-        _this->_manager->_waitingThreads.push_back(_this);
-        if (_this->_manager->tooManyThreads()) {
+        bool tooManyThreads = _this->_manager->tooManyThreads();
+        _this->_manager->_waitingThreads.push_back(_this);//记住要判断完之后再加入等待线程
+        if (tooManyThreads) {
             struct timeval now{};//当前时间
             struct timespec timespec{};//超时时间
             gettimeofday(&now, NULL);
@@ -277,11 +276,10 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
                 break;
             }
         } else {
-            pthread_cond_wait(&_this->runnableReady, &_this->_manager->_mutex);
             //等到了，就继续跑，没等到，就一直阻塞
+            pthread_cond_wait(&_this->runnableReady, &_this->_manager->_mutex);
         }
     }
-
     //线程退出前，清理空间
     _this->_manager->_waitingThreads.remove(_this);
     _this->_manager->_allThreads.erase(_this);
