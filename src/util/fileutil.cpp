@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include "../log/logger.h"
 #include "./guard.h"
+#include <dirent.h>
+#include <sys/types.h>
 
 int FileUtil::addFlag2Fd(int fd, int flag) {
     int old = fcntl(fd, F_GETFL, 0);
@@ -60,4 +62,46 @@ bool FileUtil::isRegularFile(const std::string &path) {
     }
     //若输入的文件路径是普通文件
     return S_ISREG(buf.st_mode);
+}
+
+bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &folder, std::list<std::string> &file) {
+
+    DIR *pDir;
+    struct dirent *pEntry;
+    struct dirent *pResult;
+    if ((pDir = opendir(path.data())) == NULL) {
+        error("opendir[%s] error: %s", path, strerror(errno));
+        //文件夹无效
+        return false;
+    }
+    pEntry = (struct dirent *) malloc(sizeof(struct dirent));
+    pResult = (struct dirent *) malloc(sizeof(struct dirent));
+    while (1) {
+        if ((readdir_r(pDir, pEntry, &pResult)) != 0) {
+            error("readdir_r[%s] error: %s", path, strerror(errno));
+            return false;
+        }
+        if (pResult == NULL)
+            break;
+        if (pResult->d_name[0] == '.')
+            continue;
+        if (DT_DIR == pResult->d_type) {
+            folder.push_back(pResult->d_name);
+        } else if (DT_REG == pResult->d_type) {
+            file.push_back(pResult->d_name);
+        }
+    }
+    closedir(pDir);
+    free(pEntry);
+    free(pResult);
+
+    return true;
+}
+
+bool FileUtil::getFileInfo(const std::string &path, struct stat &fileInfo) {
+    if (stat(path.c_str(), &fileInfo) < 0) {
+        error("stat[%s] error: %s", path, strerror(errno));
+        return false;
+    }
+    return true;
 }

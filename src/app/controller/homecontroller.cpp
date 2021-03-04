@@ -5,6 +5,7 @@
 #include "../../container/controller.h"
 #include "../../log/logger.h"
 #include "../../util/fileutil.h"
+#include "../service/fileservice.h"
 
 struct HelloWorld {
     int code = 10;
@@ -16,19 +17,15 @@ Serialization(HelloWorld, code, msg, ids)
 
 struct HomeController : public Controller<HomeController> {
 
-    RequestMapping(index, "/user/name")
-    void index(HttpRequest *request, HttpResponse *response) {
-        trace("......home controller......");
-        response->getBody().assign("123456");
-    }
-
     RequestMapping(home, "/")
     std::string home(HttpRequest *request, HttpResponse *response) {
         return "/index.html";
     }
 
-    RequestMapping(name, "/hello")
+    RequestMapping(name, "/getFolder")
     ResponseBody name(HttpRequest *request, HttpResponse *response) {
-        return HelloWorld();
+        auto params = request->getRequestParams();
+        std::string path = params["path"];
+        return FileService::getFolderByPath(path);
     }
 };

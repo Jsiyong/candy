@@ -1,14 +1,14 @@
 <template>
     <div class="file-constructor">
-        <el-tree :data="data"
-                 node-key="id"
+        <el-tree :data="folderList"
+                 node-key="name"
                  :current-node-key="selectedId"
                  default-expand-all
                  :expand-on-click-node="false" @node-click="clickHandler">
             <template #default="{ node, data }">
         <span class="custom-tree-node">
           <span class="folder-icn" :class="{'expanded':node.expanded,'is-leaf':node.isLeaf}"></span>
-          <span>{{ node.label }}</span>
+          <span>{{data.name }}</span>
           <span class="opt-icn">
             <i class="el-icon-download" v-if="node.isLeaf" title="下载文件"></i>
             <i class="el-icon-upload2" v-else title="上传文件"></i>
@@ -32,42 +32,43 @@
         props: ["changeSelectedNode", "selectedId", "toggleConstructor", "constructorShow"],
         data() {
             return {
-                data: [
-                    {
-                        id: 1,
-                        label: '一级 1',
-                        children: [{
-                            id: 4,
-                            label: '二级 1-1',
-                            children: [{
-                                id: 9,
-                                label: '三级 1-1-1'
-                            }, {
-                                id: 10,
-                                label: '三级 1-1-2'
-                            }]
-                        }]
-                    }, {
-                        id: 2,
-                        label: '一级 2',
-                        children: [{
-                            id: 5,
-                            label: '二级 2-1'
-                        }, {
-                            id: 6,
-                            label: '二级 2-2'
-                        }]
-                    }, {
-                        id: 3,
-                        label: '一级 3',
-                        children: [{
-                            id: 7,
-                            label: '二级 3-1'
-                        }, {
-                            id: 8,
-                            label: '二级 3-2'
-                        }]
-                    }]
+                folderList: []
+                // folderList: [
+                //     {
+                //         id: 1,
+                //         label: '一级 1',
+                //         children: [{
+                //             id: 4,
+                //             label: '二级 1-1',
+                //             children: [{
+                //                 id: 9,
+                //                 label: '三级 1-1-1'
+                //             }, {
+                //                 id: 10,
+                //                 label: '三级 1-1-2'
+                //             }]
+                //         }]
+                //     }, {
+                //         id: 2,
+                //         label: '一级 2',
+                //         children: [{
+                //             id: 5,
+                //             label: '二级 2-1'
+                //         }, {
+                //             id: 6,
+                //             label: '二级 2-2'
+                //         }]
+                //     }, {
+                //         id: 3,
+                //         label: '一级 3',
+                //         children: [{
+                //             id: 7,
+                //             label: '二级 3-1'
+                //         }, {
+                //             id: 8,
+                //             label: '二级 3-2'
+                //         }]
+                //     }]
             }
         },
         methods: {
@@ -78,7 +79,16 @@
             //显示隐藏左边列表
             clickConstructorIcn() {
                 this.toggleConstructor();
+            },
+            fetchData() {
+                axios.get(window.$config.addr + '/getFolder?path=/tmp/tmp.mkWXUL9TBY').then((res) => {
+                    console.log(res.data);
+                    this.folderList = res.data.folderList;
+                })
             }
+        },
+        mounted() {
+            this.fetchData();
         }
     }
 </script>
@@ -127,9 +137,9 @@
         color: #fff;
     }
 
-    .el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
+    /*.el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
         color: transparent;
-    }
+    }*/
 
     .el-tree-node .el-tree-node__content .folder-icn {
         display: inline-block;
@@ -146,9 +156,11 @@
         background-size: 100% 100%;
     }
 
+/*
     .el-tree-node .el-tree-node__content .folder-icn.is-leaf {
         opacity: 0;
     }
+*/
 
     .el-tree-node .el-tree-node__content .opt-icn {
         position: absolute;

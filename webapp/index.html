@@ -14,6 +14,7 @@
     <!-- import element-ui JavaScript -->
     <script src="static/lib/element/element-2.15.1.js"></script>
     <script src="static/lib/httpVueLoader.js"></script>
+    <script src="static/lib/axios/axios.js"></script>
     <style>
         body {
             position: absolute;
@@ -34,6 +35,9 @@
 </div>
 </body>
 <script type="module">
+    //导入全局配置
+    import './config.js'
+
     new Vue({
         el: '#app',
         data: {
