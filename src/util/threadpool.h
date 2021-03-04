@@ -14,7 +14,7 @@
  * 接口
  */
 struct Runnable {
-    virtual ~Runnable();
+    virtual ~Runnable() = default;
 
     virtual void run() = 0;
 };

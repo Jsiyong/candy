@@ -146,11 +146,7 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     trace("pthread release ok!!");
 }
 
-Runnable::~Runnable() {
-
-}
 #endif
-
 
 ThreadPoolExecutor::ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeout) {
     _coreNum = coreNum;
@@ -164,8 +160,8 @@ ThreadPoolExecutor::ThreadPoolExecutor(int coreNum, int maxNum, int expiryTimeou
 void ThreadPoolExecutor::submit(Runnable *task) {
 
     MutexLocker locker(&_mutex);
-    trace("current thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(), _waitingThreads.size(),
-          _tasks.size());
+//    trace("current thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(), _waitingThreads.size(),
+//          _tasks.size());
     //判断是不是有线程，没有的话就创一个
     if (_allThreads.empty()) {
         startThread(task);
