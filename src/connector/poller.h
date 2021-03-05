@@ -13,10 +13,10 @@
 /**
  * 选择器，使用epoll实现
  */
-struct Poller {
+struct Poller : public Runnable {
     Poller();
 
-    ~Poller();
+    ~Poller() override;
 
     /**
      * 添加一个频道，支持多线程添加epoll_ctl和epoll_wait线程安全
@@ -46,17 +46,14 @@ private:
      */
     void removeEvent(int fd);
 
-    /**
-     * 开始执行事件循环
-     */
-    static void *execEventLoop(void *param);
+    void run() override;
 
     int _epfd;
-//    std::list<SocketProcessor *> _socketProcessors;
+
     std::unordered_map<int, SocketProcessor *> _socketProcessors;//key: 客户端fd, value: socket处理对象
     ThreadPoolExecutor *_executor = NULL;
     bool _exit = false;//线程是否退出
-    pthread_t _threadId;//线程号
+
     pthread_mutex_t _mutex;//互斥量
 
 };

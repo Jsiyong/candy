@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #define MAX_CLIENT_QUEUE 50
 #define IP_SIZE 20
@@ -46,11 +47,12 @@ void Acceptor::acceptAt(const std::string &host, int port) {
     ret = ::listen(_fd, MAX_CLIENT_QUEUE);
     exit_if(ret < 0, "listen error:%s", strerror(errno));
     trace("\n\n"
-          "#######   #####   #     #  ######   ##   ## \n"
-          "##       #     #  # #   #  #     #    # #   \n"
-          "##       #######  #  #  #  #     #     #    \n"
-          "##       #     #  #   # #  #     #     #    \n"
-          "#######  #     #  #     #  ######      #    run at http://%s:%d\n\n", host, port);
+          "████████      ████      ████       ██ ███████    ██          ██ \n"
+          "██           ██  ██     ██ ██      ██ ██      ██   ██      ██   \n"
+          "██          ████████    ██   ██    ██ ██       ██    ██████     \n"
+          "██         ██      ██   ██     ██  ██ ██       ██      ██       \n"
+          "██        ██        ██  ██      ██ ██ ██      ██       ██       \n"
+          "████████ ██          ██ ██       ████ ████████         ██       run at http://%s:%d\n\n", host, port);
 #if 0
     //设置非阻塞，防止在accept之前客户端发送RST然后出现卡在accept的情况
     FileUtil::setNonBlock(_fd);
@@ -86,6 +88,8 @@ void Acceptor::acceptLoop() {
 
 Acceptor::~Acceptor() {
     _exit = true;
+    close(_fd);//关闭监听的文件描述符
+
     delete _poller;
 }
 

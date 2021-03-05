@@ -11,8 +11,7 @@
 
 Poller::Poller() {
 
-    //线程池，核心线程5个，最大线程10个，每隔30秒查询一次
-    _executor = new ThreadPoolExecutor(5, 10, 30);
+    _executor = ThreadPoolExecutor::getInstance();
 
     _epfd = epoll_create(1);
     exit_if(_epfd < 0, "epoll_create error:%s", strerror(errno));
@@ -20,8 +19,8 @@ Poller::Poller() {
 
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
-    //创建监听线程
-    pthread_create(&_threadId, NULL, &Poller::execEventLoop, this);
+    //创建反应堆线程，也就是把当前这个对象加入线程池中
+    _executor->submit(this);
 }
 
 void Poller::attach(int fd) {
@@ -58,29 +57,27 @@ void Poller::attach(int fd) {
     this->addEvent(fd);
 }
 
-void *Poller::execEventLoop(void *param) {
-
-    Poller *pPoller = (Poller *) param;
+void Poller::run() {
 
     struct epoll_event events[MAX_EVENT];
 
-    while (!pPoller->_exit) {
+    while (!this->_exit) {
 
-        int eventCount = epoll_wait(pPoller->_epfd, events, MAX_EVENT, -1);
+        int eventCount = epoll_wait(this->_epfd, events, MAX_EVENT, -1);
         //epoll_wait有可能被信号打断，所以还要判断errno是不是为EINTR
         exit_if(eventCount == -1 && errno != EINTR, "epoll_wait error:%s", strerror(errno));
         //处理每一个事件
         for (int i = 0; i < eventCount; ++i) {
-            pthread_mutex_lock(&pPoller->_mutex);
-            auto item = pPoller->_socketProcessors.find(events[i].data.fd);
+            pthread_mutex_lock(&this->_mutex);
+            auto item = this->_socketProcessors.find(events[i].data.fd);
 
-            if (item == pPoller->_socketProcessors.end()) {
+            if (item == this->_socketProcessors.end()) {
                 //TODO 不知道什么原因，会出现这种情况
                 error("find error processor[fd: %d]", events[i].data.fd);
             }
 
             SocketProcessor *pSocketProcessor = item->second;
-            pthread_mutex_unlock(&pPoller->_mutex);
+            pthread_mutex_unlock(&this->_mutex);
             //先判断是不是有异常情况，是不是断开了连接等等，异常了直接移除这个socket，否则才提交线程池处理
             if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
 
@@ -89,19 +86,19 @@ void *Poller::execEventLoop(void *param) {
                 //记得删掉指针
                 delete pSocketProcessor;
 
-                pthread_mutex_lock(&pPoller->_mutex);
-                pPoller->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
-                pthread_mutex_unlock(&pPoller->_mutex);
+                pthread_mutex_lock(&this->_mutex);
+                this->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
+                pthread_mutex_unlock(&this->_mutex);
 
                 //注意，close事件要放到erase之后，避免close之后的瞬间客户端又用这个fd建立起新的连接，并且发生数据
                 //如果是这样的话，那时候如果还没erase,但是客户端却发来了连接建立的请求，而且发送了数据来。但是来了之后可能这个线程又erase了
                 //就会奔溃
-                pPoller->removeEvent(clifd);
+                this->removeEvent(clifd);
 
                 trace("client[%d] disconnected..", clifd);
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
                 //提交任务
-                pPoller->_executor->submit(pSocketProcessor);
+                this->_executor->submit(pSocketProcessor);
             }
         }
     }
@@ -109,7 +106,6 @@ void *Poller::execEventLoop(void *param) {
 
 Poller::~Poller() {
     _exit = true;
-    pthread_join(_threadId, NULL);
     pthread_mutex_destroy(&_mutex);
 }
 

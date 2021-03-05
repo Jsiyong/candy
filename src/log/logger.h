@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include "../util/runnable.h"
 
 #include "../util/singleton.h"
 #include "logappender.h"
@@ -86,7 +87,7 @@ protected:
 /**
  * 异步日志器
  */
-struct AsyncLogger : public Logger {
+struct AsyncLogger : public Logger, public Runnable {
 
     AsyncLogger();
 
@@ -95,10 +96,9 @@ struct AsyncLogger : public Logger {
 private:
     virtual void write(const LoggingEvent &event);
 
-    static void *runLoop(void *param);
+    void run() override;
 
     std::list<LoggingEvent> _events;//存放的日志事件
-    pthread_t _threadId;//线程id
     pthread_cond_t _cond;//条件变量
     pthread_mutex_t _mutex;//互斥量
 

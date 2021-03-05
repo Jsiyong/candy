@@ -4,6 +4,7 @@
 
 #include "logger.h"
 #include "../conf/servconf.h"
+#include "../util/threadpool.h"
 
 void Logger::addAppender(LogAppender *appender) {
     _appenderList.push_back(appender);
@@ -44,35 +45,35 @@ AsyncLogger::AsyncLogger() {
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
     pthread_cond_init(&_cond, NULL);
-    pthread_create(&_threadId, NULL, AsyncLogger::runLoop, this);
+    //加入线程池管理
+    ThreadPoolExecutor::getInstance()->submit(this);
 }
 
-void *AsyncLogger::runLoop(void *param) {
-    AsyncLogger *logger = (AsyncLogger *) param;
+void AsyncLogger::run() {
     //日志线程还没有退出的时候
-    while (!logger->_exit) {
+    while (!this->_exit) {
         std::list<LoggingEvent> events;
 
-        pthread_mutex_lock(&logger->_mutex);//拿到互斥锁，进入临界区
+        pthread_mutex_lock(&this->_mutex);//拿到互斥锁，进入临界区
         //为空，就一直等，防止信号打断wait
-        while (logger->_events.empty()) {
-            pthread_cond_wait(&logger->_cond, &logger->_mutex);//令进程等待在条件变量上
-            if (logger->_exit) {
+        while (this->_events.empty()) {
+            pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
+            if (this->_exit) {
                 pthread_exit(NULL);
             }
         }
 
         //消费队列所有的数据
-        while (!logger->_events.empty()) {
-            events.push_back(logger->_events.front());
-            logger->_events.pop_front();
+        while (!this->_events.empty()) {
+            events.push_back(this->_events.front());
+            this->_events.pop_front();
         }
-        pthread_mutex_unlock(&logger->_mutex); //释放互斥锁
+        pthread_mutex_unlock(&this->_mutex); //释放互斥锁
 
         //线程开始写日志
         for (const LoggingEvent &event:events) {
             //一个一个写
-            for (LogAppender *appender : logger->_appenderList) {
+            for (LogAppender *appender : this->_appenderList) {
                 appender->doAppend(event);
             }
         }
@@ -91,7 +92,6 @@ AsyncLogger::~AsyncLogger() {
     //让线程正常退出，让主线程去收拾
     _exit = true;
     pthread_cond_broadcast(&_cond);
-    pthread_join(_threadId, NULL);
     //销毁互斥锁
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);
