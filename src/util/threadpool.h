@@ -153,7 +153,8 @@ private:
     //临界资源
     //////////////////////////////////////////////
     std::set<ExecutorThread *> _allThreads;//存放所有的线程
-    std::list<ExecutorThread *> _waitingThreads;//等待工作的线程
+    std::list<ExecutorThread *> _waitingThreads;//所有等待工作的线程
+    std::set<ExecutorThread *> _coreWaitingThread;//核心等待线程，空闲时数量应该小于等于核心线程数
     std::list<Runnable *> _tasks;//一个个的任务
     //////////////////////////////////////////////
     ///////////

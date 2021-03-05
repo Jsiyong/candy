@@ -209,7 +209,7 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     //确保所有的线程都已经释放完毕
     int threadNum = 0;
     do {
-        usleep(20);
+        usleep(100);
 
         MutexLocker locker(&_mutex);
         threadNum = _allThreads.size();
@@ -221,8 +221,13 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
 }
 
 bool ThreadPoolExecutor::tooManyThreads() {
-    //如果等待线程数大于任务数，并且线程数比核心线程数多，那么就是太多线程了
-    return _waitingThreads.size() > _tasks.size() && _allThreads.size() > _coreNum;
+    //还有线程需要分出来做任务，所以不算太多线程
+    if (_waitingThreads.size() <= _tasks.size()) {
+        return false;
+    }
+    //核心线程，一直保持coreNum条线程在等待
+    return _coreWaitingThread.size() > _coreNum;
+    //其他情况就是太多了
 }
 
 void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
@@ -273,7 +278,9 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
             }
         } else {
             //等到了，就继续跑，没等到，就一直阻塞
+            _this->_manager->_coreWaitingThread.emplace(_this);
             pthread_cond_wait(&_this->runnableReady, &_this->_manager->_mutex);
+            _this->_manager->_coreWaitingThread.erase(_this);
         }
     }
     //线程退出前，清理空间
