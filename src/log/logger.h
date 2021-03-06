@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "../util/runnable.h"
 
 #include "../util/singleton.h"
@@ -101,6 +102,8 @@ private:
     std::list<LoggingEvent> _events;//存放的日志事件
     pthread_cond_t _cond;//条件变量
     pthread_mutex_t _mutex;//互斥量
+
+    sem_t _sem;//信号量初始化
 
     bool _exit = false;//是否退出线程
 };

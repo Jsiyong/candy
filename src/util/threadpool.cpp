@@ -2,15 +2,13 @@
 // Created by Jsiyong on 2021-02-09.
 //
 #include "threadpool.h"
-#include "../log/logger.h"
 #include "guard.h"
 #include <unistd.h>
+#include <sys/time.h>
 
 void ThreadPoolExecutor::submit(Runnable *task) {
 
     MutexLocker locker(&_mutex);
-//    trace("current thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(), _waitingThreads.size(),
-//          _tasks.size());
     //判断是不是有线程，没有的话就创一个
     if (_allThreads.empty()) {
         startThread(task);
@@ -49,8 +47,6 @@ void ThreadPoolExecutor::startThread(Runnable *task) {
 
     //加入一个线程
     _allThreads.emplace(pThread);
-    trace("start a new thread, thread_num[%d], waiting_num[%d], task_num[%d]", _allThreads.size(),
-          _waitingThreads.size(), _tasks.size());
 }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {
@@ -59,7 +55,6 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     int threadNum = 0;
     do {
         usleep(100);
-
         MutexLocker locker(&_mutex);
         threadNum = _allThreads.size();
         for (auto thread:_allThreads) {
@@ -68,8 +63,6 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     } while (threadNum > 0);
 
     pthread_mutex_destroy(&_mutex);
-
-    trace("threadpool deleted!!");
 }
 
 bool ThreadPoolExecutor::tooManyThreads() {
@@ -149,9 +142,6 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
     _this->_manager->_allThreads.erase(_this);
     //删除这个对象
     delete _this;
-
-    trace("release a thread, thread_num[%d], waiting_num[%d], task_num[%d]", _this->_manager->_allThreads.size(),
-          _this->_manager->_waitingThreads.size(), _this->_manager->_tasks.size());
 
     pthread_exit(NULL);
 }

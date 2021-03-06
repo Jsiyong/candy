@@ -87,9 +87,11 @@ void Acceptor::acceptLoop() {
 }
 
 Acceptor::~Acceptor() {
+    trace("acceptor exiting...");
     _exit = true;
     close(_fd);//关闭监听的文件描述符
 
     delete _poller;
+    trace("acceptor exiting...");
 }
 

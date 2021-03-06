@@ -5,6 +5,8 @@
 #include "logger.h"
 #include "../conf/servconf.h"
 #include "../util/threadpool.h"
+#include "../util/guard.h"
+#include <unistd.h>
 
 void Logger::addAppender(LogAppender *appender) {
     _appenderList.push_back(appender);
@@ -45,39 +47,37 @@ AsyncLogger::AsyncLogger() {
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
     pthread_cond_init(&_cond, NULL);
+    //信号量初始化
+    sem_init(&_sem, 0, 0);
+
     //加入线程池管理
     ThreadPoolExecutor::getInstance()->submit(this);
 }
 
 void AsyncLogger::run() {
+
     //日志线程还没有退出的时候
     while (!this->_exit) {
-        std::list<LoggingEvent> events;
+        MutexLocker locker(&this->_mutex);
+        pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
 
-        pthread_mutex_lock(&this->_mutex);//拿到互斥锁，进入临界区
-        //为空，就一直等，防止信号打断wait
-        while (this->_events.empty()) {
-            pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
-            if (this->_exit) {
-                pthread_exit(NULL);
+        do {
+            //如果任务数为空，那么就跳过，然后去等待
+            if (this->_events.empty()) {
+                break;
             }
-        }
-
-        //消费队列所有的数据
-        while (!this->_events.empty()) {
-            events.push_back(this->_events.front());
+            LoggingEvent event = this->_events.front();
             this->_events.pop_front();
-        }
-        pthread_mutex_unlock(&this->_mutex); //释放互斥锁
-
-        //线程开始写日志
-        for (const LoggingEvent &event:events) {
+            locker.unlock();
+            //线程开始写日志
             //一个一个写
             for (LogAppender *appender : this->_appenderList) {
                 appender->doAppend(event);
             }
-        }
+        } while (true);
     }
+    //退出之前，发布一个信号量给析构函数
+    sem_post(&_sem);
 }
 
 void AsyncLogger::write(const LoggingEvent &event) {
@@ -92,6 +92,11 @@ AsyncLogger::~AsyncLogger() {
     //让线程正常退出，让主线程去收拾
     _exit = true;
     pthread_cond_broadcast(&_cond);
+
+    sem_wait(&_sem);//等待线程释放
+    usleep(10);
+    //销毁信号量
+    sem_destroy(&_sem);
     //销毁互斥锁
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);
