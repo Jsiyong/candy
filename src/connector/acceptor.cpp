@@ -93,7 +93,7 @@ Acceptor::~Acceptor() {
         this->exitClose();
     }
     delete _poller;
-    trace("acceptor exiting...");
+    trace("acceptor exit ok...");
 }
 
 void Acceptor::exitClose() {

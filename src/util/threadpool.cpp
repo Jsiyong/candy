@@ -50,11 +50,12 @@ void ThreadPoolExecutor::startThread(Runnable *task) {
 }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {
+    fprintf(stderr, "thread exiting...\n");
     _exit = true;
     //确保所有的线程都已经释放完毕
     int threadNum = 0;
     do {
-        usleep(100);
+        usleep(10);
         MutexLocker locker(&_mutex);
         threadNum = _allThreads.size();
         for (auto thread:_allThreads) {
@@ -63,6 +64,8 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     } while (threadNum > 0);
 
     pthread_mutex_destroy(&_mutex);
+
+    fprintf(stderr, "thread exit ok...\n");
 }
 
 bool ThreadPoolExecutor::tooManyThreads() {

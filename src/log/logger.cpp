@@ -56,11 +56,9 @@ AsyncLogger::AsyncLogger() {
 
 void AsyncLogger::run() {
 
+    MutexLocker locker(&this->_mutex);
     //日志线程还没有退出的时候
     while (!this->_exit) {
-        MutexLocker locker(&this->_mutex);
-        pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
-
         do {
             //如果任务数为空，那么就跳过，然后去等待
             if (this->_events.empty()) {
@@ -74,7 +72,11 @@ void AsyncLogger::run() {
             for (LogAppender *appender : this->_appenderList) {
                 appender->doAppend(event);
             }
+
+            locker.relock();//写完重新获取锁
         } while (true);
+
+        pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
     }
     //退出之前，发布一个信号量给析构函数
     sem_post(&_sem);

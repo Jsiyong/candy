@@ -28,4 +28,9 @@ struct HomeController : public Controller<HomeController> {
         std::string path = params["path"];
         return FileService::getFolderByPath(path);
     }
+
+    RequestMapping(hello, "/hello")
+    ResponseBody hello(HttpRequest *request, HttpResponse *response) {
+        return HelloWorld();
+    }
 };
