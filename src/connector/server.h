@@ -15,7 +15,17 @@ struct Server {
 
     ~Server();
 
+    /**
+     * 循环执行监听
+     * @param host
+     * @param port
+     */
     void execLoopAt(const std::string &host, unsigned short port);
+
+    /**
+     * 关闭服务器监听
+     */
+    void close();
 
 private:
 

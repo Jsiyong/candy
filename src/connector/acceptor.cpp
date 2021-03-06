@@ -14,6 +14,7 @@
 #define IP_SIZE 20
 
 Acceptor::Acceptor() {
+    _exit = false;
     _poller = new Poller();
 }
 
@@ -88,10 +89,15 @@ void Acceptor::acceptLoop() {
 
 Acceptor::~Acceptor() {
     trace("acceptor exiting...");
-    _exit = true;
-    close(_fd);//关闭监听的文件描述符
-
+    if (!_exit) {
+        this->exitClose();
+    }
     delete _poller;
     trace("acceptor exiting...");
+}
+
+void Acceptor::exitClose() {
+    _exit = true;
+    close(_fd);//关闭监听的文件描述符
 }
 
