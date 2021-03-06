@@ -23,6 +23,8 @@ static void beforeExit() {
     delete pThreadPool;//删除线程池
 }
 
+#include <unistd.h>
+
 int main(int argc, char **argv) {
     //1：参数解析
     CmdParser::parse(argc, argv);
@@ -41,10 +43,10 @@ int main(int argc, char **argv) {
     pServer = new Server();
     //主线程循环accept
     pServer->execLoopAt(serverConf.getHost(), serverConf.getPort());
-
     //挂上清理函数
     atexit(beforeExit);
 
+    //主线程执行事件循环，等待释放
     //退出主线程
     return 0;
 }

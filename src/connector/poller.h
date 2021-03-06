@@ -30,8 +30,9 @@ private:
     /**
      * 添加一个文件描述符进入epoll
      * @param fd
+     * @param nonblock 非阻塞
      */
-    void addEvent(int fd);
+    void addEvent(int fd, bool nonblock = true);
 
     /**
      * 修改文件描述符
@@ -48,7 +49,9 @@ private:
 
     void run() override;
 
-    int _epfd;
+    int _epfd = 0;
+
+    int _eventfd;//负责告诉epoll_wait需要退出了
 
     std::unordered_map<int, SocketProcessor *> _socketProcessors;//key: 客户端fd, value: socket处理对象
     ThreadPoolExecutor *_executor = NULL;
