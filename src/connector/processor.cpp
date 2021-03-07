@@ -13,7 +13,7 @@ void SocketProcessor::run() {
             //客户端的读事件产生，读到recvBuffer中
             _channel->read(_recvBuffer);
             if (_channel->close()) {
-                //TODO 若EPOLLRDHUP没有和EPOLLIN一起触发，需要处理这种情况
+                //若EPOLLRDHUP没有和EPOLLIN一起触发，可能会出现这种情况，但是在EPOLLRDHUP那里会处理的，所以直接break,退出函数就行
                 break;
             }
 
