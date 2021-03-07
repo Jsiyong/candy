@@ -1,14 +1,18 @@
 <template>
     <div class="file-constructor">
+        <div class="url-paths">
+            <el-link v-for="(item,index) in pathList" :key="index" @click="clickPathHandler(index)">
+                {{item}}/
+            </el-link>
+        </div>
         <el-tree :data="folderList"
                  node-key="name"
                  render-after-expand
                  highlight-current
+                 default-expand-all
                  :props="defaultProps"
                  :expand-on-click-node="true"
-                 @node-click="clickHandler"
-                 @node-expand="clickHandler"
-                 @node-collapse="clickHandler">
+                 @node-click="clickHandler">
             <template #default="{ node, data }">
         <span class="custom-tree-node">
           <span class="folder-icn" :class="{'expanded':node.expanded,'is-leaf':node.isLeaf}"></span>
@@ -40,31 +44,71 @@
                 defaultProps: {
                     children: 'folderList',
                     label: 'name'
-                }
+                },
+                pathList: []
             }
         },
         methods: {
+            clickPathHandler(index) {
+                console.log(index)
+                let path = ''
+                var pathListTmp = []
+                for (var i = 0; i < index; i++) {
+                    path += '/' + this.pathList[i]
+                    pathListTmp.push(this.pathList[i])
+                }
+            },
             //点击选中节点
             clickHandler(data, node, nodeSelf) {
                 this.changeSelectedNode(node);//改变upDown中的选中节点
+                this.fetchData(this.formatPath(data.path + '/' + data.name))
             },
             //显示隐藏左边列表
             clickConstructorIcn() {
                 this.toggleConstructor();
             },
-            fetchData() {
-                axios.get(window.$config.addr + '/getFolder?path=/tmp').then((res) => {
-                    console.log(res.data);
-                    this.folderList.push(res.data);
+            fetchData(path) {
+                axios.get(`${window.$config.addr}/getFolder?path=${path}`).then((res) => {
+                    this.folderList = [res.data];
+                    this.pathList = this.genPathList(path);
                 })
+            },
+            genPathList(path) {
+                let list = path.split('/');
+                let res = ['']
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i] !== '') {
+                        res.push(list[i])
+                    }
+                }
+                return res;
+            },
+            formatPath(path) {
+                let res = '';
+                let list = path.split('/');
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i] !== '') {
+                        res += '/' + list[i];
+                    }
+                }
+                if (res.length === 0) {
+                    res = '/';
+                }
+                return res;
             }
         },
         mounted() {
-            this.fetchData();
+            this.fetchData('/');
         }
     }
 </script>
 <style scoped>
+
+    .url-paths {
+        margin-top: 2%;
+        margin-left: 4%;
+    }
+
     .file-constructor {
         pointer-events: all;
         height: 100%;
@@ -82,7 +126,7 @@
         padding: 30px 2px;
         cursor: pointer;
         position: absolute;
-        right: 0px;
+        right: 0;
         top: 50%;
         transform: translate(100%, -100%);
     }
@@ -93,11 +137,19 @@
         height: 100%;
         background: transparent !important;
         color: inherit;
-        margin: 50px 10px;
+        margin-left: 2%;
     }
 
     .el-tree-node:focus > .el-tree-node__content {
         background-color: transparent;
+    }
+
+    .el-tree-node__content > .el-tree-node__expand-icon {
+        padding: 0;
+    }
+
+    .el-icon-caret-right:before {
+        content: none;
     }
 
     .el-tree-node.is-current > .el-tree-node__content {
@@ -109,13 +161,14 @@
     }
 
     .el-tree-node .el-tree-node__content .el-tree-node__expand-icon {
-        color: #fff;
-    }
-
-    .el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
         color: transparent;
     }
 
+    /*
+        .el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
+            color: transparent;
+        }
+    */
     .el-tree-node .el-tree-node__content .folder-icn {
         display: inline-block;
         background-image: url("../../assets/folder-close.png");

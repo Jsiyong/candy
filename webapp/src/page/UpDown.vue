@@ -26,7 +26,6 @@
         methods: {
             //点击选中节点
             changeSelectedNode(node) {
-                debugger
                 this.fileList = node.data.fileList;
             },
             //显示隐藏左边列表
@@ -44,12 +43,12 @@
     }
 
     .up-down .left {
-        /*width: 20%;*/
+        width: 50%;
         transition: all 0.5s;
     }
 
     .up-down .right {
-        width: 80%;
+        width: 50%;
         transition: all 0.5s;
     }
 

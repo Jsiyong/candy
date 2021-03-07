@@ -8,7 +8,7 @@
 bool FileService::getFolderByPath(FolderVO &results, const std::string &path, bool enterSubdirectory) {
     int sepIndex = path.rfind('/');
     results.path = path.substr(0, sepIndex);
-    results.name = path.substr(sepIndex + 1);
+    results.name = path == "/" ? "/" : path.substr(sepIndex + 1);
 
     std::list<std::string> paths;
     if (!FileUtil::scanDirectory(path, paths)) {
@@ -17,7 +17,7 @@ bool FileService::getFolderByPath(FolderVO &results, const std::string &path, bo
 
     struct stat statBuf{0};
     for (const std::string &name:paths) {
-        std::string sub = path + "/" + name;
+        std::string sub = path == "/" ? "/" + name : path + "/" + name;
         FileUtil::getFileInfo(sub, statBuf);
         if (S_ISDIR(statBuf.st_mode)) {
             //如果是路径文件

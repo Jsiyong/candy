@@ -30,7 +30,7 @@ struct HomeController : public Controller<HomeController> {
 
         FolderVO folderVo;
         //递归获取
-        FileService::getFolderByPath(folderVo, path, true);
+        FileService::getFolderByPath(folderVo, path, false);
         return folderVo;
     }
 
