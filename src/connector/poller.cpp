@@ -84,6 +84,11 @@ void Poller::run() {
 
             pthread_mutex_lock(&this->_mutex);
             auto item = this->_socketProcessors.find(events[i].data.fd);
+            if (item == this->_socketProcessors.end()) {
+                error("epoll wait: _socketProcessors error!!");
+                continue;//找不到这个socket，可能是EPOLLRDHUP没有和EPOLLIN一起触发，而是先触发了EPOLLRDHUP后又触发了EPOLLIN
+            }
+
             SocketProcessor *pSocketProcessor = item->second;
             pthread_mutex_unlock(&this->_mutex);
             //先判断是不是有异常情况，是不是断开了连接等等，异常了直接移除这个socket，否则才提交线程池处理
