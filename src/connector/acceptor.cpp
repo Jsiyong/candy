@@ -74,7 +74,7 @@ void Acceptor::acceptLoop() {
         clientfd = ::accept(_fd, (struct sockaddr *) &clientaddr, &socklen);
         if (clientfd < 0) {
             fatal("accept error:%s", strerror(errno));
-            return;
+            continue;
         }
         info("[servfd:%d]process accept...", _fd);
 
