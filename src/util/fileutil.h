@@ -54,10 +54,9 @@ struct FileUtil {
     /**
      * 查看目录下的情况
      * @param path
-     * @param folder
-     * @param file
+     * @param results
      */
-    static bool scanDirectory(const std::string &path, std::list<std::string> &folder, std::list<std::string> &file);
+    static bool scanDirectory(const std::string &path, std::list<std::string> &results);
 
     /**
      * 获取文件的信息

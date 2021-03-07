@@ -3,17 +3,17 @@
         <div class="folder-bg">
             <div class="folder-table">
                 <div class="line header">
+                    <div class="min">路径</div>
                     <div class="min">名称</div>
                     <div class="min">修改日期</div>
-                    <div class="min">类型</div>
                     <div class="min">大小</div>
                 </div>
                 <div class="container">
-                    <div class="line content" v-for="item in list">
-                        <div class="name min">{{item.fileName}}</div>
-                        <div class="min">{{item.updateTime}}</div>
-                        <div class="min">{{item.fileType}}</div>
-                        <div class="min">{{item.fileSize}}</div>
+                    <div class="line content" v-for="item in fileList">
+                        <div class="min">{{item.path}}</div>
+                        <div class="name min">{{item.name}}</div>
+                        <div class="min">{{item.lastModifyTime}}</div>
+                        <div class="min">{{item.size}}</div>
                     </div>
                 </div>
             </div>
@@ -24,187 +24,9 @@
 <script>
     module.exports = {
         name: 'FolderContent',
-        props: [],
+        props: ["fileList"],
         data() {
-            return {
-                list: [
-                    {
-                        id: 4,
-                        fileName: "哈哈哈",
-                        fileType: "文件夹",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                    {
-                        id: 4,
-                        fileName: "test",
-                        fileType: "文本文档",
-                        updateTime: "2020-02-12 12:21:21",
-                        fileSize: "12KB"
-                    },
-                ]
-            }
+            return {}
         },
         methods: {},
         created() {
@@ -278,20 +100,6 @@
         height: calc(100% - 100px);
         overflow-y: scroll;
         pointer-events: all;
-    }
-
-    ::-webkit-scrollbar {
-        width: 6px !important;
-        background: transparent !important;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        border-radius: 10px !important;
-        background: #6d986a !important;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent !important;
     }
 
     .folder-content .folder-table .container .content {

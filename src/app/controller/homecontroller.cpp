@@ -11,9 +11,10 @@ struct HelloWorld {
     int code = 10;
     std::string msg = "hello-world";
     std::vector<int> ids = {1, 9, 2, 3, 4, 5};
+    std::vector<HelloWorld> hello3;
 };
 
-Serialization(HelloWorld, code, msg, ids)
+Serialization(HelloWorld, code, msg, ids, hello3)
 
 struct HomeController : public Controller<HomeController> {
 
@@ -26,11 +27,17 @@ struct HomeController : public Controller<HomeController> {
     ResponseBody name(HttpRequest *request, HttpResponse *response) {
         auto params = request->getRequestParams();
         std::string path = params["path"];
-        return FileService::getFolderByPath(path);
+
+        FolderVO folderVo;
+        //递归获取
+        FileService::getFolderByPath(folderVo, path, true);
+        return folderVo;
     }
 
     RequestMapping(hello, "/hello")
     ResponseBody hello(HttpRequest *request, HttpResponse *response) {
-        return HelloWorld();
+        HelloWorld helloWorld;
+        helloWorld.hello3.emplace_back();
+        return helloWorld;
     }
 };

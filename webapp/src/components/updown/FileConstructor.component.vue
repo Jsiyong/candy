@@ -2,9 +2,13 @@
     <div class="file-constructor">
         <el-tree :data="folderList"
                  node-key="name"
-                 :current-node-key="selectedId"
-                 default-expand-all
-                 :expand-on-click-node="false" @node-click="clickHandler">
+                 render-after-expand
+                 highlight-current
+                 :props="defaultProps"
+                 :expand-on-click-node="true"
+                 @node-click="clickHandler"
+                 @node-expand="clickHandler"
+                 @node-collapse="clickHandler">
             <template #default="{ node, data }">
         <span class="custom-tree-node">
           <span class="folder-icn" :class="{'expanded':node.expanded,'is-leaf':node.isLeaf}"></span>
@@ -15,6 +19,7 @@
           </span>
         </span>
             </template>
+
         </el-tree>
         <div class="expand-icn" @click="clickConstructorIcn">
             <i class="el-icon-d-arrow-left" v-if="constructorShow"></i>
@@ -28,62 +33,29 @@
 
     module.exports = {
         name: 'FileConstructor',
-        // components: {TreeNode},
-        props: ["changeSelectedNode", "selectedId", "toggleConstructor", "constructorShow"],
+        props: ["changeSelectedNode", "toggleConstructor", "constructorShow"],
         data() {
             return {
-                folderList: []
-                // folderList: [
-                //     {
-                //         id: 1,
-                //         label: '一级 1',
-                //         children: [{
-                //             id: 4,
-                //             label: '二级 1-1',
-                //             children: [{
-                //                 id: 9,
-                //                 label: '三级 1-1-1'
-                //             }, {
-                //                 id: 10,
-                //                 label: '三级 1-1-2'
-                //             }]
-                //         }]
-                //     }, {
-                //         id: 2,
-                //         label: '一级 2',
-                //         children: [{
-                //             id: 5,
-                //             label: '二级 2-1'
-                //         }, {
-                //             id: 6,
-                //             label: '二级 2-2'
-                //         }]
-                //     }, {
-                //         id: 3,
-                //         label: '一级 3',
-                //         children: [{
-                //             id: 7,
-                //             label: '二级 3-1'
-                //         }, {
-                //             id: 8,
-                //             label: '二级 3-2'
-                //         }]
-                //     }]
+                folderList: [],
+                defaultProps: {
+                    children: 'folderList',
+                    label: 'name'
+                }
             }
         },
         methods: {
             //点击选中节点
             clickHandler(data, node, nodeSelf) {
-                this.changeSelectedNode(node.id);//改变upDown中的选中节点
+                this.changeSelectedNode(node);//改变upDown中的选中节点
             },
             //显示隐藏左边列表
             clickConstructorIcn() {
                 this.toggleConstructor();
             },
             fetchData() {
-                axios.get(window.$config.addr + '/getFolder?path=/tmp/tmp.mkWXUL9TBY').then((res) => {
+                axios.get(window.$config.addr + '/getFolder?path=/tmp').then((res) => {
                     console.log(res.data);
-                    this.folderList = res.data.folderList;
+                    this.folderList.push(res.data);
                 })
             }
         },
@@ -102,6 +74,7 @@
         color: #fff;
     }
 
+
     .file-constructor .expand-icn {
         background: rgb(98, 133, 95);
         border-radius: 0 4px 4px 0;
@@ -114,11 +87,13 @@
         transform: translate(100%, -100%);
     }
 
+
     .el-tree {
+        overflow: scroll;
+        height: 100%;
         background: transparent !important;
         color: inherit;
         margin: 50px 10px;
-        overflow: hidden;
     }
 
     .el-tree-node:focus > .el-tree-node__content {
@@ -137,9 +112,9 @@
         color: #fff;
     }
 
-    /*.el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
+    .el-tree-node .el-tree-node__content .el-tree-node__expand-icon.is-leaf {
         color: transparent;
-    }*/
+    }
 
     .el-tree-node .el-tree-node__content .folder-icn {
         display: inline-block;
@@ -156,11 +131,11 @@
         background-size: 100% 100%;
     }
 
-/*
-    .el-tree-node .el-tree-node__content .folder-icn.is-leaf {
-        opacity: 0;
-    }
-*/
+    /*
+        .el-tree-node .el-tree-node__content .folder-icn.is-leaf {
+            opacity: 0;
+        }
+    */
 
     .el-tree-node .el-tree-node__content .opt-icn {
         position: absolute;

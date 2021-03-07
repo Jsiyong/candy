@@ -2,17 +2,14 @@
     <div class="up-down" :class="{'constructor-hidden':!constructorShow}">
         <file-constructor class="left"
                           :change-selected-node="changeSelectedNode"
-                          :selected-id="selectedId"
                           :toggle-constructor="toggleConstructor"
                           :constructor-show="constructorShow"></file-constructor>
         <folder-content class="right"
-                        :selected-id="selectedId"></folder-content>
+                        :file-list="fileList"></folder-content>
     </div>
 </template>
 
 <script>
-    // import FileConstructor from '/@/components/updown/FileConstructor.component.vue'
-    // import FolderContent from "../components/updown/FolderContent.component.vue";
 
     module.exports = {
         name: 'UpDown',
@@ -22,24 +19,21 @@
         },
         data() {
             return {
-                selectedId: '',//选中节点id
+                fileList: [],//选中节点
                 constructorShow: true,//是否隐藏左边列表
             }
         },
         methods: {
             //点击选中节点
-            changeSelectedNode(id) {
-                this.selectedId = id;
+            changeSelectedNode(node) {
+                debugger
+                this.fileList = node.data.fileList;
             },
             //显示隐藏左边列表
             toggleConstructor() {
                 this.constructorShow = !this.constructorShow;
             }
-        },
-        // components: {
-        //   FolderContent,
-        //   FileConstructor
-        // }
+        }
     }
 </script>
 
@@ -50,7 +44,7 @@
     }
 
     .up-down .left {
-        width: 20%;
+        /*width: 20%;*/
         transition: all 0.5s;
     }
 
@@ -65,5 +59,18 @@
 
     .up-down.constructor-hidden .right {
         width: 100%;
+    }
+    ::-webkit-scrollbar {
+        width: 6px !important;
+        background: transparent !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border-radius: 10px !important;
+        background: #6d986a !important;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent !important;
     }
 </style>

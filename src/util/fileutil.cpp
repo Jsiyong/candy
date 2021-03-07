@@ -64,7 +64,7 @@ bool FileUtil::isRegularFile(const std::string &path) {
     return S_ISREG(buf.st_mode);
 }
 
-bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &folder, std::list<std::string> &file) {
+bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &results) {
 
     DIR *pDir;
     struct dirent *pEntry;
@@ -76,7 +76,7 @@ bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &fo
     }
     pEntry = (struct dirent *) malloc(sizeof(struct dirent));
     pResult = (struct dirent *) malloc(sizeof(struct dirent));
-    while (1) {
+    while (true) {
         if ((readdir_r(pDir, pEntry, &pResult)) != 0) {
             error("readdir_r[%s] error: %s", path, strerror(errno));
             return false;
@@ -85,10 +85,9 @@ bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &fo
             break;
         if (pResult->d_name[0] == '.')
             continue;
-        if (DT_DIR == pResult->d_type) {
-            folder.push_back(pResult->d_name);
-        } else if (DT_REG == pResult->d_type) {
-            file.push_back(pResult->d_name);
+        if (DT_DIR == pResult->d_type || DT_REG == pResult->d_type) {
+            //正规的文件夹和文件才加入里面
+            results.emplace_back(pResult->d_name);
         }
     }
     closedir(pDir);
