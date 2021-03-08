@@ -1,6 +1,6 @@
 <template>
     <div class="file-constructor">
-        <div class="url-paths">
+        <div class="url-paths" v-if="constructorShow">
             <el-link v-for="(item,index) in pathList" :key="index" @click="clickPathHandler(index)">
                 {{item}}/
             </el-link>
@@ -53,26 +53,30 @@
                 console.log(index)
                 let path = ''
                 var pathListTmp = []
-                for (var i = 0; i < index; i++) {
+                for (var i = 0; i <= index; i++) {
                     path += '/' + this.pathList[i]
                     pathListTmp.push(this.pathList[i])
                 }
+                this.pathList = pathListTmp;
+                this.fetchData(path)
             },
             //点击选中节点
             clickHandler(data, node, nodeSelf) {
                 this.changeSelectedNode(node);//改变upDown中的选中节点
-                this.fetchData(this.formatPath(data.path + '/' + data.name))
+                this.fetchData(data.path + '/' + data.name)
             },
             //显示隐藏左边列表
             clickConstructorIcn() {
                 this.toggleConstructor();
             },
             fetchData(path) {
+                path = this.formatPath(path)//路径格式化一下
                 axios.get(`${window.$config.addr}/getFolder?path=${path}`).then((res) => {
                     this.folderList = [res.data];
                     this.pathList = this.genPathList(path);
                 })
             },
+            //路径列表格式化
             genPathList(path) {
                 let list = path.split('/');
                 let res = ['']
@@ -83,6 +87,7 @@
                 }
                 return res;
             },
+            //路径格式化
             formatPath(path) {
                 let res = '';
                 let list = path.split('/');

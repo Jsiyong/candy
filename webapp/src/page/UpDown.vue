@@ -43,12 +43,12 @@
     }
 
     .up-down .left {
-        width: 50%;
+        width: 30%;
         transition: all 0.5s;
     }
 
     .up-down .right {
-        width: 50%;
+        width: 70%;
         transition: all 0.5s;
     }
 
