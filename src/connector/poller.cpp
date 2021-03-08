@@ -51,6 +51,10 @@ void Poller::attach(int fd) {
     socketProcessor->setOnAfterWriteUnCompletedResponse([=]() {
         this->updateEvent(fd, EPOLLOUT);
     });
+    //socket关闭了，触发epoll_wait释放信息
+    socketProcessor->setOnAfterSocketChannelClosed([=]() {
+        this->updateEvent(fd, EPOLLRDHUP | EPOLLHUP | EPOLLERR);
+    });
 
     //需要加锁
     pthread_mutex_lock(&_mutex);
@@ -84,15 +88,17 @@ void Poller::run() {
 
             pthread_mutex_lock(&this->_mutex);
             auto item = this->_socketProcessors.find(events[i].data.fd);
+#if 0
             if (item == this->_socketProcessors.end()) {
                 error("epoll wait: _socketProcessors error!!");
                 continue;//找不到这个socket，可能是EPOLLRDHUP没有和EPOLLIN一起触发，而是先触发了EPOLLRDHUP后又触发了EPOLLIN
             }
-
+#endif
             SocketProcessor *pSocketProcessor = item->second;
             pthread_mutex_unlock(&this->_mutex);
+
             //先判断是不是有异常情况，是不是断开了连接等等，异常了直接移除这个socket，否则才提交线程池处理
-            if (events[i].events & EPOLLRDHUP) {//客户端断开了连接
+            if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {//客户端断开了连接
 
                 int clifd = pSocketProcessor->getChannel()->fd();
 
@@ -101,6 +107,7 @@ void Poller::run() {
 
                 pthread_mutex_lock(&this->_mutex);
                 this->_socketProcessors.erase(clifd);//移除掉这个key对应的内容
+                int size = this->_socketProcessors.size();
                 pthread_mutex_unlock(&this->_mutex);
 
                 //注意，close事件要放到erase之后，避免close之后的瞬间客户端又用这个fd建立起新的连接，并且发生数据
@@ -108,7 +115,7 @@ void Poller::run() {
                 //就会奔溃
                 this->removeEvent(clifd);
 
-                trace("client[%d] disconnected..", clifd);
+                trace("client[%d] disconnected,current client size[%d]..", clifd, size);
             } else if (events[i].events & (EPOLLIN | EPOLLOUT)) {//可读事件和可写事件都进入这个地方
                 //提交任务
                 this->_executor->submit(pSocketProcessor);

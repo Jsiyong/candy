@@ -46,6 +46,8 @@ struct SocketProcessor : Runnable {
 
     void setOnAfterWriteUnCompletedResponse(const std::function<void(void)> &afterWriteUnCompletedResponse);
 
+    void setOnAfterSocketChannelClosed(const std::function<void(void)> &afterSocketChannelClosed);
+
 private:
 
     ProcessorStatus _status = ProcessorStatus::READ_REQUEST;//当前处理的状态
@@ -63,6 +65,7 @@ private:
     std::function<void(void)> _afterReadUnCompletedRequest;//在读到不完整请求之后
     std::function<void(void)> _afterWriteCompletedResponse;//在写完完整的回复之后
     std::function<void(void)> _afterWriteUnCompletedResponse;//在写完完整的回复之后
+    std::function<void(void)> _afterSocketChannelClosed;//在channel关闭的时候回调
 };
 
 #endif //CANDY_PROCESSOR_H

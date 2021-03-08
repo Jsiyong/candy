@@ -93,6 +93,7 @@ size_t SocketChannel::write(const std::string &srcs) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 //真的读错了
                 _close = true;
+                error("write error: %s", strerror(errno));
             }
             break;
         } else {

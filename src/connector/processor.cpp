@@ -14,6 +14,9 @@ void SocketProcessor::run() {
             _channel->read(_recvBuffer);
             if (_channel->close()) {
                 //若EPOLLRDHUP没有和EPOLLIN一起触发，可能会出现这种情况，但是在EPOLLRDHUP那里会处理的，所以直接break,退出函数就行
+                if (_afterSocketChannelClosed) {
+                    _afterSocketChannelClosed();
+                }
                 break;
             }
 
@@ -55,9 +58,16 @@ void SocketProcessor::run() {
             //如果是可写事件触发
 //            trace("start write...");
             size_t writedSize = _channel->write(_sendBuffer);
+            if (_channel->close()) {
+                if (_afterSocketChannelClosed) {
+                    _afterSocketChannelClosed();
+                }
+                break;//如果通道关闭，什么都不用做，交给epoll_wait去处理异常就行
+            }
 //            trace("response data: %s", _sendBuffer);
             _sendBuffer.assign(_sendBuffer.begin() + writedSize, _sendBuffer.end());//写完之后就清空缓冲区
 
+            //通道关闭了，也当成读完成的状态，后面会在epoll_wait那里触发EPOLLRDHUP事件
             if (_sendBuffer.empty()) {
                 _status = ProcessorStatus::READ_REQUEST;
                 if (_afterWriteCompletedResponse) {
@@ -108,4 +118,8 @@ void SocketProcessor::setOnAfterReadUnCompletedRequest(const std::function<void(
 void
 SocketProcessor::setOnAfterWriteUnCompletedResponse(const std::function<void(void)> &afterWriteUnCompletedResponse) {
     _afterWriteUnCompletedResponse = afterWriteUnCompletedResponse;
+}
+
+void SocketProcessor::setOnAfterSocketChannelClosed(const std::function<void(void)> &afterSocketChannelClosed) {
+    this->_afterSocketChannelClosed = afterSocketChannelClosed;
 }
