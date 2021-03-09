@@ -27,7 +27,7 @@ struct ABC {
 Serialization(ABC, i, s, j, f, m, aaa)
 
 int main() {
-    std::vector<char> jsonStr;
+    std::string jsonStr;
     JsonObject jsonObj;
 
     std::string str = "{ \"你好\":{ \"I\\\"NT\":122,\"NULL\":null , \"FALSE\": false, \"TRUE\": true},\"k1\":\"v1\",\"k2\" : \"v2\",\"k3\" : {\"j1\":\"j2\"}, \"k4\":[\"1\",{\"k2\":\"k1\"},\"3\",\"4\", { } ,[],{\"1\":1},[1],[-200],[1.222222]] }";

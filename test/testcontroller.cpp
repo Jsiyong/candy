@@ -19,9 +19,9 @@ struct MyController : public Controller<MyController> {
 
 int main() {
 
-    EventDispatcher::getInstance()->getHandlerByPath("/user/index")(NULL, NULL);
+    EventDispatcher::getInstance()->getJsonHandlerByPath("/user/index")(NULL, NULL);
 
-    EventDispatcher::getInstance()->getHandlerByPath("/user/name")(NULL, NULL);
+    EventDispatcher::getInstance()->getJsonHandlerByPath("/user/name")(NULL, NULL);
 
     return 0;
 }

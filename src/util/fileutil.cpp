@@ -67,15 +67,13 @@ bool FileUtil::isRegularFile(const std::string &path) {
 bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &results) {
 
     DIR *pDir;
-    struct dirent *pEntry;
-    struct dirent *pResult;
     if ((pDir = opendir(path.data())) == NULL) {
         error("opendir[%s] error: %s", path, strerror(errno));
         //文件夹无效
         return false;
     }
-    pEntry = (struct dirent *) malloc(sizeof(struct dirent));
-    pResult = (struct dirent *) malloc(sizeof(struct dirent));
+    struct dirent *pEntry = (struct dirent *) malloc(sizeof(struct dirent));
+    struct dirent *pResult = NULL;
     while (true) {
         if ((readdir_r(pDir, pEntry, &pResult)) != 0) {
             error("readdir_r[%s] error: %s", path, strerror(errno));
@@ -92,7 +90,6 @@ bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &re
     }
     closedir(pDir);
     free(pEntry);
-    free(pResult);
 
     return true;
 }

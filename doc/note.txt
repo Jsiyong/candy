@@ -19,3 +19,6 @@ listenfd[监听的fd] connfd[客户端连接的fd]
 1.对于监听的listenfd，最好使用水平触发模式，边缘触发模式会导致高并发情况下，有的客户端会连接不上。如果非要使用边缘触发，可以用while来循环accept()。
 2.对于读写的connfd，水平触发模式下，阻塞和非阻塞效果都一样，不过为了防止特殊情况，还是建议设置非阻塞。
 3.对于读写的connfd，边缘触发模式下，必须使用非阻塞IO，并要一次性全部读写完数据
+
+内存泄漏检查工具
+valgrind --log-file="valgrind.log" --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --track-origins=yes ./candy

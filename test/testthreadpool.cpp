@@ -25,7 +25,8 @@ int main() {
     pLogger->addAppender(pLogAppender);
     LogManager::getInstance()->setLogger(pLogger);
 
-    ThreadPoolExecutor *executor = new ThreadPoolExecutor(1, 2, 10);
+    ThreadPoolExecutor *executor = ThreadPoolExecutor::getInstance();
+    executor->startWith(1, 2, 10);
 
     for (int i = 0; i < 2; ++i) {
         Task *t = new Task(i);

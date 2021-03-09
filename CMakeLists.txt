@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 project(candy)
 message(STATUS "#### current project ${PROJECT_NAME}")
 set(CMAKE_CXX_STANDARD 11)
+# 设置debug模式先
+set(CMAKE_BUILD_TYPE "Debug")
+
 # 设置exe输出路径直接放到项目路径下
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/)
 

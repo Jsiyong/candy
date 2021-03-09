@@ -9,6 +9,7 @@
 #include "connector/server.h"
 #include <signal.h>
 
+//valgrind --log-file="valgrind.log" --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes ./candy
 int main(int argc, char **argv) {
     //1：参数解析
     CmdParser::parse(argc, argv);
