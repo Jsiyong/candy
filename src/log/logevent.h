@@ -101,9 +101,9 @@ private:
 private:
     LogLevel _level;//日志等级
     std::string _message;//日志信息
-    struct timeval _time;//记录日志的时间
+    struct timeval _time{};//记录日志的时间
     std::string _file;//是哪个文件
-    int _line;//第几行
+    int _line = 0;//第几行
     std::string _function;//是哪个函数
     pthread_t _threadId;//线程id
     std::string _logName;//日志名称
