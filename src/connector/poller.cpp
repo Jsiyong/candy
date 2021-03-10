@@ -164,7 +164,7 @@ void Poller::addEvent(int fd, bool nonblock) {
 }
 
 void Poller::updateEvent(int fd, uint32_t events) {
-    struct epoll_event event;
+    struct epoll_event event{};
     event.data.fd = fd;
     event.events = events | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
     int ret = epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &event);//注意是EPOLL_CTL_MOD修改
