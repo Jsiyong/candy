@@ -19,7 +19,8 @@
           <span>{{data.name }}</span>
           <span class="opt-icn">
             <i class="el-icon-download" v-if="node.isLeaf" title="下载文件"></i>
-            <i class="el-icon-upload2" v-else title="上传文件"></i>
+            <i class="el-icon-upload2" v-else title="上传文件" @click="clickSelectFile"></i>
+            <input ref="fileSelector" name="file" type="file" @change="uploadFile">
           </span>
         </span>
             </template>
@@ -49,6 +50,13 @@
             }
         },
         methods: {
+            uploadFile() {
+                //上传文件
+                const inputFile = this.$refs.fileSelector.files[0];
+            },
+            clickSelectFile() {
+                this.$refs.fileSelector.dispatchEvent(new MouseEvent('click'));//触发input框的点击事件
+            },
             clickPathHandler(index) {
                 console.log(index)
                 let path = ''
@@ -71,7 +79,7 @@
             },
             fetchData(path) {
                 path = this.formatPath(path)//路径格式化一下
-                axios.get(`${window.$config.addr}/getFolder?path=${path}`).then((res) => {
+                axios.get(`${window.$config.addr} / getFolder ? path =${path}`).then((res) => {
                     this.folderList = [res.data];
                     this.pathList = this.genPathList(path);
                 })
@@ -108,6 +116,9 @@
     }
 </script>
 <style scoped>
+    input[type=file] {
+        display: none;
+    }
 
     .url-paths {
         margin-top: 2%;
