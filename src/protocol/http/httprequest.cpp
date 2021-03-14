@@ -7,9 +7,6 @@
 #include <string.h>
 #include <vector>
 
-#define CR '\r'
-#define LF '\n'
-
 /**
  * Http请求行的状态
  */
@@ -60,7 +57,7 @@ void HttpRequest::tryDecode(const std::string &src) {
         switch (_decodeState) {
             case DecodeState::START: {
                 //空格 换行 回车都继续
-                if (ch == CR || ch == LF || isblank(ch)) {
+                if (ch == '\r' || ch == '\n' || isblank(ch)) {
                     //do nothing
                 } else if (isupper(ch)) {//判断是不是大写字符，不是的话是无效的
                     _method.assign(1, ch);//方法的起始点
@@ -106,7 +103,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::BEFORE_URI_PARAM_KEY: {
-                if (isblank(ch) || ch == LF || ch == CR) {
+                if (isblank(ch) || ch == '\n' || ch == '\r') {
                     _decodeState = DecodeState::INVALID;
                 } else {
                     _requestParamKey.assign(1, ch);
@@ -125,7 +122,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::BEFORE_URI_PARAM_VALUE: {
-                if (isblank(ch) || ch == LF || ch == CR) {
+                if (isblank(ch) || ch == '\n' || ch == '\r') {
                     _decodeState = DecodeState::INVALID;
                 } else {
                     _requestParamValue.assign(1, ch);
@@ -176,7 +173,7 @@ void HttpRequest::tryDecode(const std::string &src) {
             }
             case DecodeState::VERSION: {
                 //协议解析，如果不是数字或者. 就不对
-                if (ch == CR) {
+                if (ch == '\r') {
                     _decodeState = DecodeState::WHEN_CR;
                 } else if (ch == '.') {
                     //遇到版本分割
@@ -231,7 +228,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::HEADER_VALUE: {
-                if (ch == CR) {
+                if (ch == '\r') {
                     _headers.insert({_headerKey, _headerValue});
                     _decodeState = DecodeState::WHEN_CR;
                 }
@@ -239,7 +236,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::WHEN_CR: {
-                if (ch == LF) {
+                if (ch == '\n') {
                     //如果是回车，可换成下一个
                     _decodeState = DecodeState::CR_LF;
                 } else {
@@ -248,7 +245,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::CR_LF: {
-                if (ch == CR) {
+                if (ch == '\r') {
                     //如果在CR_LF状态之后还有CR，那么便是有点结束的味道了
                     _decodeState = DecodeState::CR_LF_CR;
                 } else if (isblank(ch)) {
@@ -261,7 +258,7 @@ void HttpRequest::tryDecode(const std::string &src) {
                 break;
             }
             case DecodeState::CR_LF_CR: {
-                if (ch == LF) {
+                if (ch == '\n') {
                     //如果是\r接着\n 那么判断是不是需要解析请求体
                     if (_headers.count("Content-Length") > 0) {
                         _contentLength = atoll(_headers["Content-Length"].c_str());

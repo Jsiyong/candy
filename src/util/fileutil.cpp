@@ -101,3 +101,15 @@ bool FileUtil::getFileInfo(const std::string &path, struct stat &fileInfo) {
     }
     return true;
 }
+
+bool FileUtil::writeFile(const std::string &path, const std::string &src) {
+    //先以读形式打开文件
+    FILE *pFile = fopen(path.c_str(), "wb");
+    if (!pFile) {
+        error("fopen[%s] error: %s", path, strerror(errno));
+        return false;
+    }
+    ExitCaller caller([=]() { fclose(pFile); });
+    fwrite(src.data(), src.size(), 1, pFile);
+    return true;
+}

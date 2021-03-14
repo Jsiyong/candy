@@ -16,6 +16,14 @@ struct FileService {
      * @return
      */
     static bool getFolderByPath(FolderVO &results, const std::string &path, bool enterSubdirectory = false);
+
+    /**
+     * 保存文件
+     * @param path 文件路径
+     * @param data 文件内容
+     * @return
+     */
+    static bool saveFile(const std::string &path, const std::string &data);
 };
 
 #endif //CANDY_FILESERVICE_H

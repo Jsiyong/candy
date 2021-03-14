@@ -37,3 +37,11 @@ void HttpBase::clear() {
 void HttpBase::setHeader(const std::string &key, const std::string &value) {
     _headers[key] = value;
 }
+
+std::string HttpBase::getHeader(const std::string &key) const {
+    auto it = _headers.find(key);
+    if (it == _headers.end()) {
+        return "";
+    }
+    return it->second;
+}

@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "httprequest.h"
 
 struct FormDataItem {
     std::map<std::string, std::string> header;//表单数据他的头
@@ -18,6 +19,19 @@ struct FormDataItem {
  * mutipart格式的
  */
 struct HttpMultiPart {
+
+    /**
+     * 解析ContentDisposition值
+     * @param contentDisposition
+     * @return
+     */
+    static std::map<std::string, std::string> parseContentDisposition(const std::string &contentDisposition);
+
+    /**
+     * 从httpRequest转换过来
+     * @param request
+     */
+    void fromHttpRequest(HttpRequest *request);
 
     /**
      * 解析mutipart格式
@@ -31,6 +45,11 @@ struct HttpMultiPart {
      */
     void setBoundary(const std::string &boundary);
 
+    bool completed();
+
+    const std::vector<FormDataItem> &getFormData() const;
+
+private:
     /**
      * 判断ch是不是匹配当前Boundary字符
      * @param ch

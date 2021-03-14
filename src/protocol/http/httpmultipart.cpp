@@ -24,6 +24,10 @@ enum DecodeState {
 };
 
 void HttpMultiPart::tryDecode(const std::string &src) {
+    //解析完成或者buf为空都直接返回
+    if (src.empty() || completed()) {
+        return;
+    }
 
     size_t i = 0;
     for (; i < src.size() && _decodeState != DecodeState::ERROR && _decodeState != DecodeState::END; ++i) {
@@ -187,4 +191,92 @@ bool HttpMultiPart::isBoundaryFinallyEnd() {
 
 bool HttpMultiPart::isFullBoundary() {
     return _boundary.size() == _matchedBoundaryBuffer.size();//直接比较大小就够了，内容已经在上面比较过了
+}
+
+bool HttpMultiPart::completed() {
+    return _decodeState == DecodeState::END;
+}
+
+void HttpMultiPart::fromHttpRequest(HttpRequest *request) {
+    if (request && request->getBody().empty()) {
+        return;
+    }
+
+    //Content-Type: multipart/form-data; boundary=----WebKitFormBoundarySAJsB3ZsTmgE6job
+    std::string contentType = request->getHeader("Content-Type");
+    if (contentType.empty()) {
+        return;
+    }
+
+    int colonIndex = contentType.find_first_of(';');
+    if (contentType.substr(0, colonIndex) != "multipart/form-data") {
+        return;
+    }
+    //找出boundary
+    int equalIndex = contentType.find_last_of('=');
+    std::string boundary = contentType.substr(equalIndex + 1);
+    //去掉空格
+    boundary.erase(0, boundary.find_first_not_of(' '));
+    boundary.erase(boundary.find_last_not_of(' ') + 1);
+
+    this->setBoundary(boundary);
+    this->tryDecode(request->getBody());//解析
+}
+
+std::map<std::string, std::string> HttpMultiPart::parseContentDisposition(const std::string &contentDisposition) {
+    //Content-Disposition: form-data; name=\"cs1\"; filename=\"tp2.png\"
+    //form-data; name=\"cs1\"; filename=\"tp2.png\"
+    std::string keyValueString = contentDisposition.substr(contentDisposition.find_first_of(';') + 1);
+    if (keyValueString.empty()) {
+        return {};
+    }
+
+    int state = 0;
+    std::map<std::string, std::string> result;
+    std::string key;
+    std::string value;
+
+    for (int i = 0; i < keyValueString.size(); ++i) {
+        char ch = keyValueString.at(i);
+        switch (state) {
+            case 0: {
+                //开始
+                if (!isspace(ch) && ch != ';') {
+                    key.assign(1, ch);
+                    state = 1;
+                }
+                break;
+            }
+            case 1: {//遇到等于号
+                if (ch == '=') {
+                    state = 2;
+                } else {
+                    key.push_back(ch);
+                }
+                break;
+            }
+            case 2: {
+                if (ch == '"') {
+                    value.clear();
+                    state = 3;
+                }
+                break;
+            }
+            case 3: {
+                if (ch == '"') {
+                    //字符串结束了
+                    state = 0;
+                    result.emplace(key, value);
+                } else {
+                    value.push_back(ch);
+                }
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+const std::vector<FormDataItem> &HttpMultiPart::getFormData() const {
+    return _formData;
 }

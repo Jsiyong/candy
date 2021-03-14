@@ -38,6 +38,14 @@ struct FileUtil {
     static bool readFile(const std::string &path, std::string &dst);
 
     /**
+     * 写文件
+     * @param path
+     * @param src
+     * @return
+     */
+    static bool writeFile(const std::string &path, const std::string &src);
+
+    /**
      * 判断文件是否存在
      * @param path
      * @return
