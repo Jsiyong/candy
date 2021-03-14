@@ -6,6 +6,7 @@
 #include "../vo/resultvo.h"
 #include "../../protocol/http/httpmultipart.h"
 #include "../service/fileservice.h"
+#include "../../util/urlutil.h"
 
 struct FileController : public Controller<FileController> {
 
@@ -39,8 +40,10 @@ struct FileController : public Controller<FileController> {
     RequestMapping(download, "/download")
     void download(HttpRequest *request, HttpResponse *response) {
         auto params = request->getRequestParams();
-        std::string filePath = params["path"];
-        response->setHeader("Content-Disposition", "attachment");
+        std::string filePath = UrlUtil::decode(params["path"]);
+        response->setHeader("Content-Disposition",
+                            "attachment;filename=" + params["path"].substr(params["path"].find_last_of('/') + 1));
+        response->setHeader("Content-Type", "application/octet-stream");
         FileService::readFile(filePath, response->getBody());
     }
 };

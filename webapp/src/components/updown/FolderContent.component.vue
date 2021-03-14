@@ -2,8 +2,9 @@
     <div class="folder-content">
         <div class="folder-bg">
             <el-table
+                    height="100%"
                     :data="fileList"
-                    style="width: 100%">
+                    style="width: 100%;">
                 <el-table-column type="expand">
                     <template slot-scope="props">
                         <el-form label-position="left" inline class="file-table-expand">
@@ -34,6 +35,7 @@
                     <template slot-scope="scope">
                         <el-button
                                 size="mini"
+                                type="primary"
                                 @click="handleEdit(scope.$index, scope.row)">编辑
                         </el-button>
                         <el-button
@@ -43,7 +45,7 @@
                         </el-button>
                         <el-button
                                 size="mini"
-                                type="danger"
+                                type="success"
                                 @click="handleDownload(scope.$index, scope.row)">下载
                         </el-button>
                     </template>
@@ -69,8 +71,22 @@
             },
             handleDownload(index, row) {
                 console.log(index, row);
-                axios.get(`${window.$config.addr}/download?path=${row.path + "/" + row.name}`).then((res) => {
-
+                axios.get(`${window.$config.addr}/download?path=${row.path + "/" + row.name}`, {responseType: 'blob'}).then((res) => {
+                    console.log(res)
+                    // console.log(res.data)
+                    // new Blob([data])用来创建URL的file对象或者blob对象
+                    let url = window.URL.createObjectURL(new Blob([res.data]));
+                    // 生成一个a标签
+                    let link = document.createElement("a");
+                    link.style.display = "none";
+                    link.href = url;
+                    // 生成时间戳
+                    let timestamp = new Date().getTime();
+                    link.download = row.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link); //下载完成移除元素
+                    window.URL.revokeObjectURL(url); //释放内存
                 })
             }
         },

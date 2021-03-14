@@ -5,6 +5,7 @@
 #include "../../container/controller.h"
 #include "../../log/logger.h"
 #include "../service/fileservice.h"
+#include "../../util/urlutil.h"
 
 struct HelloWorld {
     int code = 10;
@@ -25,7 +26,7 @@ struct HomeController : public Controller<HomeController> {
     RequestMapping(name, "/getFolder")
     ResponseBody name(HttpRequest *request, HttpResponse *response) {
         auto params = request->getRequestParams();
-        std::string path = params["path"];
+        std::string path = UrlUtil::decode(params["path"]);
 
         FolderVO folderVo;
         //递归获取

@@ -21,12 +21,17 @@
             return {
                 fileList: [],//选中节点
                 constructorShow: true,//是否隐藏左边列表
+                currentRoute: window.location.pathname
             }
         },
         methods: {
+            initData() {
+                let search = window.location.search;
+            },
             //点击选中节点
             changeSelectedNode(node) {
                 this.fileList = node.data.fileList;
+                // window.location.href = "";
             },
             //显示隐藏左边列表
             toggleConstructor() {
@@ -43,12 +48,12 @@
     }
 
     .up-down .left {
-        width: 30%;
+        width: 20%;
         transition: all 0.5s;
     }
 
     .up-down .right {
-        width: 70%;
+        width: 80%;
         transition: all 0.5s;
     }
 
@@ -59,6 +64,7 @@
     .up-down.constructor-hidden .right {
         width: 100%;
     }
+
     ::-webkit-scrollbar {
         width: 6px !important;
         background: transparent !important;
