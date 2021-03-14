@@ -5,6 +5,7 @@
                 {{item}}/
             </el-link>
         </div>
+        <input ref="fileSelector" name="file" type="file" @change="uploadFile(currentClickNode)">
         <el-tree :data="folderList"
                  node-key="name"
                  render-after-expand
@@ -18,13 +19,12 @@
           <span class="folder-icn" :class="{'expanded':node.expanded,'is-leaf':node.isLeaf}"></span>
           <span>{{data.name }}</span>
           <span class="opt-icn">
-            <i class="el-icon-download" v-if="node.isLeaf" title="下载文件"></i>
-            <i class="el-icon-upload2" v-else title="上传文件" @click="clickSelectFile"></i>
-            <input ref="fileSelector" name="file" type="file" @change="uploadFile">
+<!--            <i class="el-icon-download" v-if="node.isLeaf" title="下载文件"></i>-->
+              <!--            <i class="el-icon-upload2" v-else title="上传文件" @click="clickSelectFile(data)"></i>-->
+              <i class="el-icon-upload2" title="上传文件" @click.stop="clickSelectFile(data)"></i>
           </span>
         </span>
             </template>
-
         </el-tree>
         <div class="expand-icn" @click="clickConstructorIcn">
             <i class="el-icon-d-arrow-left" v-if="constructorShow"></i>
@@ -46,15 +46,22 @@
                     children: 'folderList',
                     label: 'name'
                 },
-                pathList: []
+                pathList: [],
+                currentClickNode: {}
             }
         },
         methods: {
-            uploadFile() {
+            uploadFile(data) {
                 //上传文件
                 const inputFile = this.$refs.fileSelector.files[0];
+                var forms = new FormData()
+                forms.append('file', inputFile)
+                axios.post(`${window.$config.addr}/upload?path=${this.formatPath(data.path + "/" + data.name)}`, forms).then(res => {
+                    this.$message(res.data.msg);
+                })
             },
-            clickSelectFile() {
+            clickSelectFile(data) {
+                this.currentClickNode = data;
                 this.$refs.fileSelector.dispatchEvent(new MouseEvent('click'));//触发input框的点击事件
             },
             clickPathHandler(index) {
@@ -79,7 +86,7 @@
             },
             fetchData(path) {
                 path = this.formatPath(path)//路径格式化一下
-                axios.get(`${window.$config.addr} / getFolder ? path =${path}`).then((res) => {
+                axios.get(`${window.$config.addr}/getFolder?path=${path}`).then((res) => {
                     this.folderList = [res.data];
                     this.pathList = this.genPathList(path);
                 })

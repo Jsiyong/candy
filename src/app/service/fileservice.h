@@ -24,6 +24,14 @@ struct FileService {
      * @return
      */
     static bool saveFile(const std::string &path, const std::string &data);
+
+    /**
+     * 读取文件
+     * @param path
+     * @param data
+     * @return
+     */
+    static bool readFile(const std::string &path, std::string &data);
 };
 
 #endif //CANDY_FILESERVICE_H

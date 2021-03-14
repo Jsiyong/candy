@@ -45,3 +45,7 @@ bool FileService::getFolderByPath(FolderVO &results, const std::string &path, bo
 bool FileService::saveFile(const std::string &path, const std::string &data) {
     return FileUtil::writeFile(path, data);
 }
+
+bool FileService::readFile(const std::string &path, std::string &data) {
+    return FileUtil::readFile(path, data);
+}

@@ -9,6 +9,9 @@
 
 struct FileController : public Controller<FileController> {
 
+    /**
+     * 上传文件
+     */
     RequestMapping(upload, "/upload")
     ResponseBody upload(HttpRequest *request, HttpResponse *response) {
         HttpMultiPart multiPart;
@@ -28,5 +31,16 @@ struct FileController : public Controller<FileController> {
             FileService::saveFile(path + "/" + keyValuePair["filename"], item.body);
         }
         return ResultVO(0, "success");
+    }
+
+    /**
+     * 下载文件
+     */
+    RequestMapping(download, "/download")
+    void download(HttpRequest *request, HttpResponse *response) {
+        auto params = request->getRequestParams();
+        std::string filePath = params["path"];
+        response->setHeader("Content-Disposition", "attachment");
+        FileService::readFile(filePath, response->getBody());
     }
 };
