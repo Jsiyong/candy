@@ -126,12 +126,12 @@
     input[type=file] {
         display: none;
     }
-
+/*
     .url-paths {
         margin-top: 2%;
         margin-left: 4%;
     }
-
+*/
     .file-constructor {
         pointer-events: all;
         height: 100%;

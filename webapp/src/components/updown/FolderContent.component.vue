@@ -96,6 +96,8 @@
 </script>
 <style>
     .folder-content {
+        overflow: hidden;
+        height: calc(100% - 60px);
         margin: 30px;
         background: linear-gradient(to left, #89ba86, #89ba86) left top no-repeat,
         linear-gradient(to bottom, #89ba86, #89ba86) left top no-repeat,
