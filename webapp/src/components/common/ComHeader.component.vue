@@ -1,35 +1,45 @@
 <template>
     <div class="header">
-        <div class="system-name">文件糖糖biu~</div>
+        <div class="block system-name">
+            <el-avatar shape="square" :size="50" src="/src/assets/logo.png"></el-avatar>
+            <div>Candy</div>
+        </div>
     </div>
 </template>
 
 <script>
     module.exports = {
-        name: 'ComHeader'
+        name: 'ComHeader',
+        data() {
+            return {}
+        }
     }
 </script>
-<style>
+<style scoped>
     .header {
-        background: #95B2B1;
+        color: rgb(245 255 255);
         height: 60px;
         border-bottom: 1px solid;
-        border-image: linear-gradient(to right, transparent, #7aada1, transparent) 1;
-        box-shadow: 0 1px 9px rgba(61, 89, 83, 0.48);
+        box-shadow: 0 2px 6px 0 rgba(0, 0, 0, .05);
         position: relative;
-        pointer-events: all;
+        z-index: 1;
     }
+
 
     .system-name {
         height: 100%;
         width: 400px;
         position: absolute;
-        left: 50%;
-        transform: translate(-50%);
+        left: 2%;
         font-size: 30px;
         font-weight: bold;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: left;
+        color: #0c0c0f;
+    }
+
+    .el-avatar > img {
+        background: white;
     }
 </style>
