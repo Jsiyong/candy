@@ -19,7 +19,7 @@
     module.exports = {
         name: 'UpDown',
         components: {
-            'file-content': httpVueLoader('../components/updown/FileContent.component.vue'),
+            'file-content': httpVueLoader('../components/file/FileContent.component.vue'),
             // 'folder-constructor': httpVueLoader('../components/updown/FolderConstructor.component.vue'),
             'com-menu': httpVueLoader('../components/common/ComMenu.component.vue'),
             Splitpanes, Pane

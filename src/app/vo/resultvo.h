@@ -6,6 +6,7 @@
 #define CANDY_RESULTVO_H
 
 #include <string>
+#include "../../protocol/json/serialization.h"
 
 /**
  * 结果集存放地方

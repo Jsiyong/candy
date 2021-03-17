@@ -49,3 +49,7 @@ bool FileService::saveFile(const std::string &path, const std::string &data) {
 bool FileService::readFile(const std::string &path, std::string &data) {
     return FileUtil::readFile(path, data);
 }
+
+bool FileService::createFolder(const std::string &path) {
+    return FileUtil::createFolder(path, 777);
+}

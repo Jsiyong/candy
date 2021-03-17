@@ -33,9 +33,9 @@ enum class ParserState {
     ERROR//错误的状态
 };
 
-JsonValue JsonParser::parse(const std::vector<char> &json) {
+JsonValue JsonParser::toJsonValue(const std::string &json) {
 
-    std::vector<char>::const_iterator p = json.begin();//当前的指针
+    auto p = json.begin();//当前的指针
 
     ParserState state = ParserState::BEGIN;
 
@@ -349,7 +349,7 @@ JsonValue JsonParser::genJsonObjectViaTokens(std::list<JsonToken> &tokens) {
     return jsonObject;
 }
 
-std::string JsonParser::parse(const JsonValue &root) {
+std::string JsonParser::toJson(const JsonValue &root) {
     std::string json;
 
     switch (root.type()) {
@@ -416,7 +416,7 @@ std::string JsonParser::parse(const JsonValue &root) {
                 } else {
                     json.push_back(',');//不是第一次，就加上','分割符
                 }
-                json.append(parse(v));
+                json.append(toJson(v));
             }
             json.push_back(']');
             break;
@@ -431,13 +431,13 @@ std::string JsonParser::parse(const JsonValue &root) {
                     json.push_back(',');//不是第一次，就加上','分割符
                 }
                 //找出key
-                json.append(parse(kv.first));
+                json.append(toJson(kv.first));
 
                 //插入分割符
                 json.push_back(':');
 
                 //找出value
-                json.append(parse(kv.second));
+                json.append(toJson(kv.second));
             }
             json.push_back('}');
             break;
@@ -452,7 +452,7 @@ bool JsonParser::isEndOfValue(char ch) {
     return ch == '}' || ch == ']';
 }
 
-void JsonParser::pushBackIfToken(std::list<JsonToken> &tokens, char ch, const std::vector<char>::const_iterator &pos) {
+void JsonParser::pushBackIfToken(std::list<JsonToken> &tokens, char ch, const std::string::const_iterator &pos) {
     switch (ch) {
         case '{':
             tokens.emplace_back(TokenType::ObjectBegin, pos);

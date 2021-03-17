@@ -32,6 +32,13 @@ struct FileService {
      * @return
      */
     static bool readFile(const std::string &path, std::string &data);
+
+    /**
+     * 创建文件夹
+     * @param path
+     * @return
+     */
+    static bool createFolder(const std::string &path);
 };
 
 #endif //CANDY_FILESERVICE_H

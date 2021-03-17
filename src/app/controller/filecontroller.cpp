@@ -7,6 +7,7 @@
 #include "../../protocol/http/httpmultipart.h"
 #include "../service/fileservice.h"
 #include "../../util/urlutil.h"
+#include "../vo/params.h"
 
 struct FileController : public Controller<FileController> {
 
@@ -45,5 +46,21 @@ struct FileController : public Controller<FileController> {
                             "attachment;filename=" + params["path"].substr(params["path"].find_last_of('/') + 1));
         response->setHeader("Content-Type", "application/octet-stream");
         FileService::readFile(filePath, response->getBody());
+    }
+
+    /**
+     * 创建文件夹
+     */
+    RequestMapping(createFolder, "/createFolder")
+    ResponseBody createFolder(HttpRequest *request, HttpResponse *response) {
+
+        //解析json
+        JsonValue jsonValue = JsonParser::toJsonValue(request->getBody());
+        FolderCreateParam param = Serializable<FolderCreateParam>::deserialize(jsonValue.toObject());
+
+        if (!FileService::createFolder(param.path == "/" ? param.path + param.name : param.path + "/" + param.name)) {
+            return ResultVO(1, "fail");
+        }
+        return ResultVO(0, "success");
     }
 };

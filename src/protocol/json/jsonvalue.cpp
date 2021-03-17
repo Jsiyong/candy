@@ -32,8 +32,6 @@ JsonValue::JsonValue(double value) {
     _value._real = value;
 }
 
-JsonValue::JsonValue(const std::vector<char> &value) : JsonValue(value.begin(), value.end()) {}
-
 JsonValue::JsonValue(const JsonObject &value) {
     setType(JsonValueType::Object);
     *_value._object = value;
@@ -41,7 +39,7 @@ JsonValue::JsonValue(const JsonObject &value) {
 
 JsonValue::JsonValue(int value) : JsonValue((long long) value) {}
 
-JsonValue::JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end) {
+JsonValue::JsonValue(const std::string::const_iterator &begin, const std::string::const_iterator &end) {
     setType(JsonValueType::String);
     _value._string->assign(begin, end);
 }

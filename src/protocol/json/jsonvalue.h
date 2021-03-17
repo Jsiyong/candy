@@ -65,7 +65,7 @@ struct JsonValue {
 
     JsonValue(const char *value);
 
-    JsonValue(const std::vector<char>::const_iterator &begin, const std::vector<char>::const_iterator &end);
+    JsonValue(const std::string::const_iterator &begin, const std::string::const_iterator &end);
 
     JsonValue(long long value);
 
@@ -74,8 +74,6 @@ struct JsonValue {
     JsonValue(bool value);
 
     JsonValue(double value);
-
-    JsonValue(const std::vector<char> &value);
 
     JsonValue(const JsonObject &value);
 

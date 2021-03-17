@@ -6,11 +6,11 @@
             <i class="el-icon-document-copy"></i>
             <span slot="title">全部文件</span>
         </el-menu-item>
-        <el-menu-item index="2">
+        <el-menu-item index="2" disabled>
             <i class="el-icon-document"></i>
             <span slot="title">系统信息</span>
         </el-menu-item>
-        <el-menu-item index="3">
+        <el-menu-item index="3" disabled>
             <i class="el-icon-setting"></i>
             <span slot="title">个人信息</span>
         </el-menu-item>

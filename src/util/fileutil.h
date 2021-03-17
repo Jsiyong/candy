@@ -72,6 +72,14 @@ struct FileUtil {
      */
     static bool getFileInfo(const std::string &path, struct stat &fileInfo);
 
+    /**
+     * 创建文件夹
+     * @param path
+     * @param mode
+     * @return
+     */
+    static bool createFolder(const std::string &path, mode_t mode);
+
 };
 
 #endif //CANDY_FILEUTIL_H

@@ -14,7 +14,7 @@ struct ResponseBody {
 
     template<typename T>
     ResponseBody(const T &t) {
-        _json = JsonParser::parse(Serializable<T>::serialize(t));
+        _json = JsonParser::toJson(Serializable<T>::serialize(t));
     }
 
     const std::string &getJson() const {

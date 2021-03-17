@@ -25,10 +25,10 @@ enum class TokenType {
 struct JsonToken {
     TokenType type;
 
-    std::vector<char>::const_iterator start;
-    std::vector<char>::const_iterator end;
+    std::string::const_iterator start;
+    std::string::const_iterator end;
 
-    JsonToken(TokenType type, const std::vector<char>::const_iterator &start) : type(type), start(start), end(start) {}
+    JsonToken(TokenType type, const std::string::const_iterator &start) : type(type), start(start), end(start) {}
 };
 
 struct JsonParser {
@@ -37,13 +37,13 @@ struct JsonParser {
      * 将json转为JsonValue
      * JsonValue: 返回的值
      */
-    static JsonValue parse(const std::vector<char> &json);
+    static JsonValue toJsonValue(const std::string &json);
 
     /**
      * 将jsonValue转为Json
      * json: 返回的值
      */
-    static std::string parse(const JsonValue &root);
+    static std::string toJson(const JsonValue &root);
 
 private:
 
@@ -75,7 +75,7 @@ private:
      * 如果是token就加入token列表
      * @param ch
      */
-    static void pushBackIfToken(std::list<JsonToken> &tokens, char ch, const std::vector<char>::const_iterator &pos);
+    static void pushBackIfToken(std::list<JsonToken> &tokens, char ch, const std::string::const_iterator &pos);
 
     //通过token生成jsonValue
     static JsonValue genJsonValueViaTokens(std::list<JsonToken> &tokens);

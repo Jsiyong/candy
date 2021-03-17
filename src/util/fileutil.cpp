@@ -113,3 +113,13 @@ bool FileUtil::writeFile(const std::string &path, const std::string &src) {
     fwrite(src.data(), src.size(), 1, pFile);
     return true;
 }
+
+bool FileUtil::createFolder(const std::string &path, mode_t mode) {
+
+    int ret = mkdir(path.c_str(), mode);
+    if (ret != 0) {
+        error("mkdir error:%s", strerror(errno));
+        return false;
+    }
+    return true;
+}
