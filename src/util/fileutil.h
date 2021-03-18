@@ -43,7 +43,7 @@ struct FileUtil {
      * @param src
      * @return
      */
-    static bool writeFile(const std::string &path, const std::string &src);
+    static bool writeFile(const std::string &path, const std::string &src, mode_t mode = 0777);
 
     /**
      * 判断文件是否存在

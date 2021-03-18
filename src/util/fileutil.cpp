@@ -102,7 +102,7 @@ bool FileUtil::getFileInfo(const std::string &path, struct stat &fileInfo) {
     return true;
 }
 
-bool FileUtil::writeFile(const std::string &path, const std::string &src) {
+bool FileUtil::writeFile(const std::string &path, const std::string &src, mode_t mode) {
     //先以读形式打开文件
     FILE *pFile = fopen(path.c_str(), "wb");
     if (!pFile) {
@@ -110,6 +110,12 @@ bool FileUtil::writeFile(const std::string &path, const std::string &src) {
         return false;
     }
     ExitCaller caller([=]() { fclose(pFile); });
+    //改变文件的权限位
+    if (chmod(path.c_str(), mode) != 0) {
+        error("chmod error: %s", strerror(errno));
+        return false;
+    }
+
     fwrite(src.data(), src.size(), 1, pFile);
     return true;
 }
