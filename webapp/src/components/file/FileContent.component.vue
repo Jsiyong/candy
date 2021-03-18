@@ -35,9 +35,15 @@
                     <div v-else-if="scope.row.type === 2" class="center-items">
                         <el-avatar shape="square" src="/src/assets/folder.png" :size="30"
                                    style="background: none"></el-avatar>
-                        <el-input class="name-input" v-model="folderName"
-                                  placeholder="请输入文件夹名称"></el-input>
-                        <el-button icon="el-icon-check" @click="doCreateFolder" class="after-input-button"></el-button>
+                        <el-input class="name-input" v-model="currentName"
+                                  placeholder="请输入名称"></el-input>
+
+                        <el-button v-if="scope.row.optType === 1" icon="el-icon-check"
+                                   @click="doRenameFile(scope.row.name)"
+                                   class="after-input-button"></el-button>
+                        <el-button v-else icon="el-icon-check" @click="doCreateFolder"
+                                   class="after-input-button"></el-button>
+
                         <el-button icon="el-icon-close" @click="closeCreate" class="after-input-button"></el-button>
                     </div>
                     <div v-else class="center-items">
@@ -93,25 +99,43 @@
             return {
                 pathList: ['全部文件'],
                 fileList: [],
-                folderName: "",
+                currentName: "",
                 loading: false
             }
         },
         methods: {
+            doRenameFile(name) {
+                axios.post(`${window.$config.addr}/rename`, {
+                    'path': this.getCurrentPathFromPathList(),
+                    'srcName': name,
+                    'targetName': this.currentName
+                }).then(res => {
+                    if (res.data.code === 0) {
+                        this.$message({
+                            message: '成功',
+                            type: 'success'
+                        });
+                    }
+                    this.currentName = ""
+                    this.fetchData(this.getCurrentPathFromPathList());
+                })
+            },
             doCreateFolder() {
                 axios.post(`${window.$config.addr}/createFolder`, {
                     'path': this.getCurrentPathFromPathList(),
-                    'name': this.folderName
+                    'name': this.currentName
                 }).then(res => {
-                    this.$message({
-                        message: '成功',
-                        type: 'success'
-                    });
+                    if (res.data.code === 0) {
+                        this.$message({
+                            message: '成功',
+                            type: 'success'
+                        });
+                    }
                     this.fetchData(this.getCurrentPathFromPathList());
                 })
             },
             closeCreate() {
-                this.fileList.splice(0, 1)
+                this.fetchData(this.getCurrentPathFromPathList());
             },
             handleCreateFolder() {
                 let path = this.getCurrentPathFromPathList();
@@ -178,6 +202,9 @@
             },
             handleEdit(index, row) {
                 console.log(index, row);
+                row['optType'] = 1;
+                row['type'] = 2;
+                this.currentName = row.name
             },
             handleDownload(index, row) {
                 console.log(index, row);

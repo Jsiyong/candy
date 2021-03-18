@@ -63,4 +63,22 @@ struct FileController : public Controller<FileController> {
         }
         return ResultVO(0, "success");
     }
+
+    /**
+     * 重命名文件
+     */
+    RequestMapping(rename, "/rename")
+    ResponseBody rename(HttpRequest *request, HttpResponse *response) {
+
+        //解析json
+        JsonValue jsonValue = JsonParser::toJsonValue(request->getBody());
+        FileRenameParam param = Serializable<FileRenameParam>::deserialize(jsonValue.toObject());
+
+        std::string path = param.path == "/" ? "" : param.path;
+
+        if (!FileService::renameFile(path + "/" + param.srcName, path + "/" + param.targetName)) {
+            return ResultVO(1, "fail");
+        }
+        return ResultVO(0, "success");
+    }
 };

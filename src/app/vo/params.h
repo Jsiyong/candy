@@ -15,4 +15,12 @@ struct FolderCreateParam {
 
 Serialization(FolderCreateParam, path, name)
 
+struct FileRenameParam {
+    std::string path;
+    std::string srcName;
+    std::string targetName;
+};
+
+Serialization(FileRenameParam, path, srcName, targetName)
+
 #endif //CANDY_PARAMS_H

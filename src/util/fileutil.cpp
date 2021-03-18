@@ -129,3 +129,11 @@ bool FileUtil::createFolder(const std::string &path, mode_t mode) {
     }
     return true;
 }
+
+bool FileUtil::renameFile(const std::string &src, const std::string &target) {
+    if (rename(src.c_str(), target.c_str()) != 0) {
+        error("rename[src:%s, target:%s] error: %s", src, target, strerror(errno));
+        return false;
+    }
+    return true;
+}

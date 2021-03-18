@@ -53,3 +53,7 @@ bool FileService::readFile(const std::string &path, std::string &data) {
 bool FileService::createFolder(const std::string &path) {
     return FileUtil::createFolder(path, 777);
 }
+
+bool FileService::renameFile(const std::string &src, const std::string &target) {
+    return FileUtil::renameFile(src, target);
+}

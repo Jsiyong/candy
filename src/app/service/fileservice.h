@@ -39,6 +39,8 @@ struct FileService {
      * @return
      */
     static bool createFolder(const std::string &path);
+
+    static bool renameFile(const std::string &src, const std::string &target);
 };
 
 #endif //CANDY_FILESERVICE_H
