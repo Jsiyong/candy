@@ -1,11 +1,7 @@
 <template>
     <splitpanes class="default-theme">
-        <pane min-size="20" max-size="20" size="20">
+        <pane min-size="15" max-size="15" size="15">
             <com-menu></com-menu>
-            <!--            <folder-constructor class="left"-->
-            <!--                                :change-selected-node="changeSelectedNode"-->
-            <!--                                :toggle-constructor="toggleConstructor"-->
-            <!--                                :constructor-show="constructorShow"></folder-constructor>-->
         </pane>
         <pane>
             <file-content :file-list="fileList"></file-content>
@@ -20,7 +16,6 @@
         name: 'UpDown',
         components: {
             'file-content': httpVueLoader('../components/file/FileContent.component.vue'),
-            // 'folder-constructor': httpVueLoader('../components/updown/FolderConstructor.component.vue'),
             'com-menu': httpVueLoader('../components/common/ComMenu.component.vue'),
             Splitpanes, Pane
         },

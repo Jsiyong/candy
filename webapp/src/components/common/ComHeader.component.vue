@@ -2,7 +2,7 @@
     <div class="header">
         <div class="block system-name">
             <el-avatar shape="square" :size="50" src="/src/assets/logo.png"></el-avatar>
-            <div>Candy</div>
+            <span style="margin-left: 5px">candy</span>
         </div>
     </div>
 </template>

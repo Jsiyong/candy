@@ -3,66 +3,79 @@
          v-loading="loading"
          element-loading-text="上传中">
         <input ref="fileSelector" name="file" type="file" @change="handleUpload">
-        <el-button type="primary" @click="clickSelectFile"><i class="el-icon-upload2 el-icon--left"></i>上传</el-button>
-        <el-button @click="handleCreateFolder"><i class="el-icon-folder-add el-icon--left"></i>新建文件夹</el-button>
-        <div class="url-path">
-            <div v-for="(item,index) in pathList" :key="index" class="url-path">
+        <el-button class="upload-button top-button" type="primary" size="medium" @click="clickSelectFile"><i
+                class="el-icon-upload2 el-icon--left"></i>上传
+        </el-button>
+        <el-button class="top-button" size="medium" @click="handleCreateFolder"><i
+                class="el-icon-folder-add el-icon--left"></i>新建文件夹
+        </el-button>
+        <div class="center-items url-paths">
+            <div v-for="(item,index) in pathList" :key="index" class="center-items">
                 <el-link @click="handleSearchFolder(index)">{{item}}</el-link>
                 <el-divider direction="vertical" v-if="index+1!==pathList.length"></el-divider>
             </div>
         </div>
+
         <el-table
-                height="100%"
+                height="80%"
                 :data="fileList"
                 style="width: 100%;">
-            <el-table-column label="名称" header-align="center">
+            <el-table-column label="名称" header-align="left" fit>
                 <template slot-scope="scope">
-                    <div v-if="scope.row.type === 1">
-                        <el-avatar shape="square" src="/src/assets/folder.png" style="background: none"></el-avatar>
+                    <div v-if="scope.row.type === 1" class="center-items">
+                        <el-avatar shape="square" src="/src/assets/folder.png" :size="30"
+                                   style="background: none"></el-avatar>
                         <el-button
                                 @click="enterFolder(scope.$index, scope.row)"
                                 type="text"
-                                size="small">
+                                size="small" style="margin-left: 5px;font-size:14px;">
                             {{ scope.row.name }}
                         </el-button>
                     </div>
-                    <div v-else-if="scope.row.type === 2">
-                        <el-avatar shape="square" src="/src/assets/folder.png" style="background: none"></el-avatar>
-                        <el-input v-model="folderName" placeholder="请输入文件夹名称"></el-input>
-                        <el-button icon="el-icon-check" @click="doCreateFolder"></el-button>
-                        <el-button icon="el-icon-close" @click="closeCreate"></el-button>
+                    <div v-else-if="scope.row.type === 2" class="center-items">
+                        <el-avatar shape="square" src="/src/assets/folder.png" :size="30"
+                                   style="background: none"></el-avatar>
+                        <el-input class="name-input" v-model="folderName"
+                                  placeholder="请输入文件夹名称"></el-input>
+                        <el-button icon="el-icon-check" @click="doCreateFolder" class="after-input-button"></el-button>
+                        <el-button icon="el-icon-close" @click="closeCreate" class="after-input-button"></el-button>
                     </div>
-                    <div v-else>
-                        <el-avatar shape="square" src="/src/assets/file.png" style="background: none"></el-avatar>
-                        <span>{{ scope.row.name }}</span>
+                    <div v-else class="center-items">
+                        <el-avatar shape="square" src="/src/assets/file.png" :size="30"
+                                   style="background: none"></el-avatar>
+                        <span style="margin-left: 5px;flex: 1">{{ scope.row.name }}</span>
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column label="大小" width="180" header-align="center" align="center">
+            <el-table-column label="大小" width="120" header-align="center" align="center">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.size }}</span>
+                    <span>{{ scope.row.size }}</span>
                 </template>
             </el-table-column>
-            <el-table-column label="修改日期" header-align="center">
+            <el-table-column label="修改日期" header-align="center" width="160" align="center">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.lastModifyTime }}</span>
+                    <span>{{ scope.row.lastModifyTime }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="操作" width="300" header-align="center" align="center">
                 <template slot-scope="scope">
                     <el-button
+                            class="operator-button"
                             size="mini"
                             type="primary"
                             v-if="scope.row.type !== 2"
+                            width="120"
                             @click="handleEdit(scope.$index, scope.row)">重命名
                     </el-button>
                     <el-button
+                            class="operator-button"
                             size="mini"
                             type="danger"
                             v-if="scope.row.type !== 2"
                             @click="handleDelete(scope.$index, scope.row)">删除
                     </el-button>
                     <el-button
+                            class="operator-button"
                             size="mini"
                             type="success"
                             v-if="!scope.row.type"
@@ -105,6 +118,7 @@
                 this.fileList.splice(0, 0, {
                     'type': 2
                 })
+                this.folderName = ""
             },
             handleUpload() {
                 //上传文件
@@ -194,6 +208,41 @@
     }
 </script>
 <style scoped>
+    .url-paths {
+        margin-bottom: 5px;
+        margin-top: 5px;
+        margin-left: 10px;
+    }
+
+    .upload-button {
+        margin-left: 10px;
+    }
+
+    .top-button {
+        margin-top: 10px;
+    }
+
+    .name-input {
+        margin-left: 5px;
+        flex: 1;
+    }
+
+    .operator-button {
+        margin-left: unset;
+    }
+
+    .after-input-button {
+        height: 30px;
+        width: 30px;
+        padding: unset;
+        margin-left: 0;
+    }
+
+    .el-input__inner {
+        height: 30px;
+        line-height: 30px;
+    }
+
     input[type=file] {
         display: none;
     }
@@ -202,7 +251,7 @@
         height: 100%;
     }
 
-    .url-path {
+    .center-items {
         display: flex;
         align-items: center;
     }
