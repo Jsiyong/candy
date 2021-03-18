@@ -80,7 +80,27 @@ struct FileUtil {
      */
     static bool createFolder(const std::string &path, mode_t mode);
 
+    /**
+     * 重命名文件、文件夹
+     * @param src
+     * @param target
+     * @return
+     */
     static bool renameFile(const std::string &src, const std::string &target);
+
+    /**
+     * 删除文件
+     * @param file
+     * @return
+     */
+    static bool deleteFile(const std::string &file);
+
+    /**
+     * 删除文件夹
+     * @param path
+     * @return
+     */
+    static bool deleteFolder(const std::string &path);
 
 };
 

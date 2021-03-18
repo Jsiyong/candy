@@ -40,6 +40,12 @@ struct FileService {
      */
     static bool createFolder(const std::string &path);
 
+    /**
+     * 重命名文件、文件夹
+     * @param src
+     * @param target
+     * @return
+     */
     static bool renameFile(const std::string &src, const std::string &target);
 };
 

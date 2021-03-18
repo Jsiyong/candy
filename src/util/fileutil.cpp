@@ -137,3 +137,19 @@ bool FileUtil::renameFile(const std::string &src, const std::string &target) {
     }
     return true;
 }
+
+bool FileUtil::deleteFile(const std::string &file) {
+    if (unlink(file.c_str()) != 0) {
+        error("unlink[%s] error: %s", file, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool FileUtil::deleteFolder(const std::string &path) {
+    if (rmdir(path.c_str()) != 0) {
+        error("rmdir[%s] error: %s", path, strerror(errno));
+        return false;
+    }
+    return true;
+}
