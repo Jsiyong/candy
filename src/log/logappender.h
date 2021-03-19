@@ -14,7 +14,7 @@
  */
 struct LogAppender {
 
-    virtual ~LogAppender();
+    virtual ~LogAppender() = default;
 
     void setLevel(LogLevel level);
 
@@ -53,7 +53,21 @@ struct ConsoleLogAppender : public LogAppender {
  * 输出日志至文件
  */
 struct FileLogAppender : public LogAppender {
+    FileLogAppender();
+
+    ~FileLogAppender() override;
+
     void append(const LoggingEvent &event) override;
+
+    /**
+     * 设置日志文件的路径
+     * @param path
+     */
+    void setFile(const std::string &file);
+
+private:
+    std::string _file;//文件路径
+    int _fd = 0;//日志文件的fd
 };
 
 #endif //CANDY_LOGAPPENDER_H

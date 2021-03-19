@@ -76,5 +76,15 @@ protected:
 
 };
 
+struct FileLogLayout : public LogLayout {
+
+    /**
+     * 格式化日志信息为字符串
+     * @param event
+     * @return
+     */
+    std::string format(const LoggingEvent &event) override;
+};
+
 
 #endif //CANDY_LOGLAYOUT_H

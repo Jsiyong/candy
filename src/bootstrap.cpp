@@ -20,7 +20,9 @@ int main(int argc, char **argv) {
     //3：日志模块初始化，采用异步日志的形式
     static Logger *pLogger = new AsyncLogger();
     static LogAppender *pLogAppender = new ConsoleLogAppender();
+    static LogAppender *pFileLogAppender = new FileLogAppender();
     pLogger->addAppender(pLogAppender);
+    pLogger->addAppender(pFileLogAppender);
     LogManager::getInstance()->setLogger(pLogger);
 
     //4:启动服务器
@@ -34,6 +36,7 @@ int main(int argc, char **argv) {
         //最后再删除日志
         delete pLogger;//删除logger
         delete pLogAppender;//删除日志
+        delete pFileLogAppender;
     });
 
     //主线程循环accept

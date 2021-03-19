@@ -95,7 +95,7 @@ private:
         std::vector<char> buf;
         buf.resize(size);
         std::snprintf(buf.data(), size, format, convert(args)...);
-        return std::string(buf.begin(), buf.end());
+        return std::string(buf.begin(), buf.begin() + size - 1);
     }
 
 private:
