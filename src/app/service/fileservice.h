@@ -47,6 +47,13 @@ struct FileService {
      * @return
      */
     static bool renameFile(const std::string &src, const std::string &target);
+
+    /**
+     * 删除文件，文件夹
+     * @param src
+     * @return
+     */
+    static bool delFile(const std::string &src);
 };
 
 #endif //CANDY_FILESERVICE_H

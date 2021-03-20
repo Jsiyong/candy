@@ -22,8 +22,8 @@ struct FileController : public Controller<FileController> {
             return ResultVO(1, "invalid multipart formatter");
         }
 
-        auto params = request->getRequestParams();
-        std::string path = params["path"];
+        auto params = request->getRequestParams();//路径方面要解码
+        std::string path = UrlUtil::decode(params["path"]);
 
         //支持多文件上传
         for (const FormDataItem &item:multiPart.getFormData()) {
@@ -78,6 +78,19 @@ struct FileController : public Controller<FileController> {
 
         if (!FileService::renameFile(path + "/" + param.srcName, path + "/" + param.targetName)) {
             return ResultVO(1, "fail");
+        }
+        return ResultVO(0, "success");
+    }
+
+    /**
+     * 重命名文件
+     */
+    RequestMapping(delFile, "/del")
+    ResponseBody delFile(HttpRequest *request, HttpResponse *response) {
+        auto params = request->getRequestParams();
+        std::string filePath = UrlUtil::decode(params["path"]);
+        if (!FileService::delFile(filePath)) {
+            return ResultVO(1, strerror(errno));
         }
         return ResultVO(0, "success");
     }

@@ -57,3 +57,14 @@ bool FileService::createFolder(const std::string &path) {
 bool FileService::renameFile(const std::string &src, const std::string &target) {
     return FileUtil::renameFile(src, target);
 }
+
+bool FileService::delFile(const std::string &src) {
+    //判断是文件还是文件夹
+    struct stat statBuf{0};
+    FileUtil::getFileInfo(src, statBuf);
+    if (S_ISDIR(statBuf.st_mode)) {
+        return FileUtil::deleteFolder(src);
+    } else {
+        return FileUtil::deleteFile(src);
+    }
+}

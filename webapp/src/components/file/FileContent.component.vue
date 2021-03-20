@@ -22,34 +22,40 @@
                 style="width: 100%;">
             <el-table-column label="名称" header-align="left" fit>
                 <template slot-scope="scope">
-                    <div v-if="scope.row.type === 1" class="center-items">
-                        <el-avatar shape="square" src="/src/assets/folder.png" :size="30"
+                    <div class="center-items">
+                        <!--首先是头像显示：1是文件夹 其他情况是文件-->
+                        <el-avatar v-if="scope.row.type === 1" shape="square" src="/src/assets/folder.png" :size="30"
                                    style="background: none"></el-avatar>
-                        <el-button
-                                @click="enterFolder(scope.$index, scope.row)"
-                                type="text"
-                                size="small" style="margin-left: 5px;font-size:14px;">
+                        <el-avatar v-else shape="square" src="/src/assets/file.png" :size="30"
+                                   style="background: none"></el-avatar>
+
+                        <!--文件夹名称的显示-->
+                        <el-button v-if="scope.row.type === 1 && scope.row.optType === 0"
+                                   @click="enterFolder(scope.$index, scope.row)"
+                                   type="text"
+                                   size="small" style="margin-left: 5px;font-size:14px;">
                             {{ scope.row.name }}
                         </el-button>
-                    </div>
-                    <div v-else-if="scope.row.type === 2" class="center-items">
-                        <el-avatar shape="square" src="/src/assets/folder.png" :size="30"
-                                   style="background: none"></el-avatar>
-                        <el-input class="name-input" v-model="currentName"
-                                  placeholder="请输入名称"></el-input>
-
-                        <el-button v-if="scope.row.optType === 1" icon="el-icon-check"
-                                   @click="doRenameFile(scope.row.name)"
+                        <!--文件名称的显示-->
+                        <span v-if="scope.row.type === 0 && scope.row.optType === 0" style="margin-left: 5px;flex: 1">
+                            {{ scope.row.name }}
+                        </span>
+                        <!--新增模式-->
+                        <el-input v-if="scope.row.optType === 1" class="name-input" v-model="currentNameToCreate"
+                                  placeholder="请输入文件夹名称"></el-input>
+                        <el-button v-if="scope.row.optType === 1" icon="el-icon-check" @click="doCreateFolder"
                                    class="after-input-button"></el-button>
-                        <el-button v-else icon="el-icon-check" @click="doCreateFolder"
+                        <el-button v-if="scope.row.optType === 1" icon="el-icon-close" @click="closeCreate"
                                    class="after-input-button"></el-button>
 
-                        <el-button icon="el-icon-close" @click="closeCreate" class="after-input-button"></el-button>
-                    </div>
-                    <div v-else class="center-items">
-                        <el-avatar shape="square" src="/src/assets/file.png" :size="30"
-                                   style="background: none"></el-avatar>
-                        <span style="margin-left: 5px;flex: 1">{{ scope.row.name }}</span>
+                        <el-input v-if="scope.row.optType === 2" class="name-input" v-model="currentNameToModify"
+                                  placeholder="请重新输入名称"></el-input>
+                        <el-button v-if="scope.row.optType === 2" icon="el-icon-check"
+                                   @click="doRename(scope.$index, scope.row)"
+                                   class="after-input-button"></el-button>
+                        <el-button v-if="scope.row.optType === 2" icon="el-icon-close"
+                                   @click="closeRename(scope.$index, scope.row)"
+                                   class="after-input-button"></el-button>
                     </div>
                 </template>
             </el-table-column>
@@ -69,22 +75,22 @@
                             class="operator-button"
                             size="mini"
                             type="primary"
-                            v-if="scope.row.type !== 2"
+                            v-if="scope.row.optType === 0"
                             width="120"
-                            @click="handleEdit(scope.$index, scope.row)">重命名
+                            @click="handleRename(scope.$index, scope.row)">重命名
                     </el-button>
                     <el-button
                             class="operator-button"
                             size="mini"
                             type="danger"
-                            v-if="scope.row.type !== 2"
+                            v-if="scope.row.optType === 0"
                             @click="handleDelete(scope.$index, scope.row)">删除
                     </el-button>
                     <el-button
                             class="operator-button"
                             size="mini"
                             type="success"
-                            v-if="!scope.row.type"
+                            v-if="scope.row.optType === 0 && scope.row.type === 0"
                             @click="handleDownload(scope.$index, scope.row)">下载
                     </el-button>
                 </template>
@@ -99,16 +105,22 @@
             return {
                 pathList: ['全部文件'],
                 fileList: [],
-                currentName: "",
+                currentNameToCreate: "",
+                currentNameToModify: "",
                 loading: false
             }
         },
         methods: {
-            doRenameFile(name) {
+            handleRename(index, row) {
+                console.log(index, row);
+                row['optType'] = 2;//编辑是2
+                this.currentNameToModify = row.name
+            },
+            doRename(index, row) {
                 axios.post(`${window.$config.addr}/rename`, {
                     'path': this.getCurrentPathFromPathList(),
-                    'srcName': name,
-                    'targetName': this.currentName
+                    'srcName': row.name,
+                    'targetName': this.currentNameToModify
                 }).then(res => {
                     if (res.data.code === 0) {
                         this.$message({
@@ -116,33 +128,41 @@
                             type: 'success'
                         });
                     }
-                    this.currentName = ""
+                    this.currentNameToModify = ""
                     this.fetchData(this.getCurrentPathFromPathList());
                 })
             },
-            doCreateFolder() {
-                axios.post(`${window.$config.addr}/createFolder`, {
-                    'path': this.getCurrentPathFromPathList(),
-                    'name': this.currentName
-                }).then(res => {
-                    if (res.data.code === 0) {
-                        this.$message({
-                            message: '成功',
-                            type: 'success'
-                        });
-                    }
-                    this.fetchData(this.getCurrentPathFromPathList());
-                })
-            },
-            closeCreate() {
-                this.fetchData(this.getCurrentPathFromPathList());
+            closeRename(index, row) {
+                row['optType'] = 0;
+                this.currentNameToModify = ""
             },
             handleCreateFolder() {
                 let path = this.getCurrentPathFromPathList();
                 this.fileList.splice(0, 0, {
-                    'type': 2
+                    'optType': 1,//新增是1
+                    'type': 1//文件夹类型是1
                 })
                 this.folderName = ""
+            },
+            doCreateFolder() {
+                axios.post(`${window.$config.addr}/createFolder`, {
+                    'path': this.getCurrentPathFromPathList(),
+                    'name': this.currentNameToCreate
+                }).then(res => {
+                    if (res.data.code === 0) {
+                        this.$message({
+                            message: '成功',
+                            type: 'success'
+                        });
+                    }
+                    this.currentNameToCreate = ""
+                    this.fetchData(this.getCurrentPathFromPathList());
+                })
+            },
+            closeCreate() {
+                //移掉添加的那一行
+                this.fileList.splice(0, 1);
+                this.currentNameToCreate = ''
             },
             handleUpload() {
                 //上传文件
@@ -180,10 +200,13 @@
                             'path': folders[i].path,
                             'name': folders[i].name,
                             'size': folders[i].size,
-                            'type': 1
+                            'type': 1,//文件夹
+                            'optType': 0
                         });
                     }
                     for (let i = 0; i < files.length; i++) {
+                        files[i].type = 0;//普通文件
+                        files[i].optType = 0;
                         this.fileList.push(files[i]);
                     }
                 })
@@ -199,16 +222,25 @@
             },
             handleDelete(index, row) {
                 console.log(index, row);
-            },
-            handleEdit(index, row) {
-                console.log(index, row);
-                row['optType'] = 1;
-                row['type'] = 2;
-                this.currentName = row.name
+                axios.get(`${window.$config.addr}/del?path=${row.path === '/' ? '/' + row.name : row.path + "/" + row.name}`).then((res) => {
+                    if (res.data.code === 0) {
+                        this.$message({
+                            message: '成功',
+                            type: 'success'
+                        });
+                    } else {
+                        this.$message({
+                            message: res.data.msg,
+                            type: 'error'
+                        });
+                    }
+                    this.fetchData(this.getCurrentPathFromPathList());
+                })
+
             },
             handleDownload(index, row) {
                 console.log(index, row);
-                axios.get(`${window.$config.addr}/download?path=${row.path + "/" + row.name}`, {responseType: 'blob'}).then((res) => {
+                axios.get(`${window.$config.addr}/download?path=${row.path === '/' ? '/' + row.name : row.path + "/" + row.name}`, {responseType: 'blob'}).then((res) => {
                     console.log(res)
                     // console.log(res.data)
                     // new Blob([data])用来创建URL的file对象或者blob对象
