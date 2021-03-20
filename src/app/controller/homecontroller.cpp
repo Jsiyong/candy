@@ -23,17 +23,6 @@ struct HomeController : public Controller<HomeController> {
         return "/index.html";
     }
 
-    RequestMapping(name, "/getFolder")
-    ResponseBody name(HttpRequest *request, HttpResponse *response) {
-        auto params = request->getRequestParams();
-        std::string path = UrlUtil::decode(params["path"]);
-
-        FolderVO folderVo;
-        //递归获取
-        FileService::getFolderByPath(folderVo, path, false);
-        return folderVo;
-    }
-
     RequestMapping(hello, "/hello")
     ResponseBody hello(HttpRequest *request, HttpResponse *response) {
         HelloWorld helloWorld;

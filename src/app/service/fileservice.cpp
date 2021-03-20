@@ -35,7 +35,7 @@ bool FileService::getFolderByPath(FolderVO &results, const std::string &path, bo
             fileVo.name = name;
             fileVo.path = path;
             fileVo.size = statBuf.st_size;
-            fileVo.lastModifyTime = statBuf.st_mtim.tv_sec;
+            fileVo.lastModifyTime = statBuf.st_mtim.tv_sec * 1000 + statBuf.st_mtim.tv_nsec;
             results.fileList.emplace_back(fileVo);
         }
     }

@@ -61,12 +61,12 @@
             </el-table-column>
             <el-table-column label="大小" width="120" header-align="center" align="center">
                 <template slot-scope="scope">
-                    <span>{{ scope.row.size }}</span>
+                    <span>{{ scope.row.size? scope.row.size + ' B' : '-' }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="修改日期" header-align="center" width="160" align="center">
                 <template slot-scope="scope">
-                    <span>{{ scope.row.lastModifyTime }}</span>
+                    <span>{{ timestampToTime(scope.row.lastModifyTime) }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="操作" width="300" header-align="center" align="center">
@@ -257,6 +257,19 @@
                     document.body.removeChild(link); //下载完成移除元素
                     window.URL.revokeObjectURL(url); //释放内存
                 })
+            },
+            timestampToTime(timestamp) {
+                if (!timestamp) {
+                    return '-';
+                }
+                let date = new Date(timestamp);
+                let Y = date.getFullYear() + '-'
+                let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
+                let D = date.getDate() + ' '
+                let h = date.getHours() + ':'
+                let m = date.getMinutes() + ':'
+                let s = date.getSeconds()
+                return Y + M + D + h + m + s
             }
         },
         created() {

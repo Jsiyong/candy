@@ -12,6 +12,20 @@
 struct FileController : public Controller<FileController> {
 
     /**
+     * 获取文件夹
+     */
+    RequestMapping(name, "/getFolder")
+    ResponseBody name(HttpRequest *request, HttpResponse *response) {
+        auto params = request->getRequestParams();
+        std::string path = UrlUtil::decode(params["path"]);
+
+        FolderVO folderVo;
+        //递归获取
+        FileService::getFolderByPath(folderVo, path, false);
+        return folderVo;
+    }
+
+    /**
      * 上传文件
      */
     RequestMapping(upload, "/upload")
