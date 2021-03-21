@@ -63,6 +63,14 @@ struct ServerConf {
      */
     std::string getServerDir() const;
 
+    bool isToStop() const;
+
+    void setToStop(bool toStop);
+
+    const std::string &getConfigPath() const;
+
+    void setConfigPath(const std::string &configPath);
+
 public:
     int port = DEFAULT_SERV_PORT; //服务器端口
     std::string host = DEFAULT_SERV_ADDR;//服务器的监听地址
@@ -72,6 +80,8 @@ public:
     ThreadPoolConf threadPoolConf;//线程池配置属性
 private:
     std::string _serverPath;//服务器运行路径
+    bool _toStop = false;//让服务器停止的参数
+    std::string _configPath;//配置文件的位置
 };
 
 Serialization(ServerConf, port, host, mode, webRoot, threadPoolConf)

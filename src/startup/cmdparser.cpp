@@ -16,13 +16,13 @@
 void CmdParser::parse(int argc, char **argv) {
 
     static struct option options[] = {
-            {"addr",       required_argument, NULL, 'a'},
-            {"daemon",     no_argument,       NULL, 'd'},
-            {"foreground", no_argument,       NULL, 'f'},
-            {"help",       no_argument,       NULL, 'h'},
-            {"port",       required_argument, NULL, 'p'},
-            {"stop",       required_argument, NULL, 's'},
-            {NULL,         no_argument,       NULL, 0}
+            {"addr",   required_argument, NULL, 'a'},
+            {"daemon", no_argument,       NULL, 'd'},
+            {"config", no_argument,       NULL, 'f'},
+            {"help",   no_argument,       NULL, 'h'},
+            {"port",   required_argument, NULL, 'p'},
+            {"stop",   required_argument, NULL, 's'},
+            {NULL,     no_argument,       NULL, 0}
     };
 
     int c;
@@ -36,7 +36,7 @@ void CmdParser::parse(int argc, char **argv) {
                 serverConf.mode = ServerConf::Mode::DAEMON;
                 break;
             case 'f':
-                serverConf.mode = ServerConf::Mode::FOREGROUND;
+                serverConf.setConfigPath(optarg);
                 break;
             case '?':
             case 'h':
@@ -45,6 +45,9 @@ void CmdParser::parse(int argc, char **argv) {
                 break;
             case 'p':
                 serverConf.port = atoi(optarg);
+                break;
+            case 's':
+                serverConf.setToStop(true);
                 break;
             default:
                 printf("?? getopt returned character code 0%o ??\n", c);
@@ -57,7 +60,7 @@ void CmdParser::parse(int argc, char **argv) {
 void CmdParser::printHelp() {
     printf("-a --addr 监听地址\n");
     printf("-d --daemon 后台运行\n");
-    printf("-f --foreground 前台运行\n");
+    printf("-f --file 配置文件\n");
     printf("-h --help 帮助\n");
     printf("-p --port 端口\n");
     printf("-s --stop 停止服务器\n");

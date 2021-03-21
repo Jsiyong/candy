@@ -63,7 +63,7 @@ struct FileLogAppender : public LogAppender {
      * 设置日志文件的路径
      * @param path
      */
-    void setFile(const std::string &file);
+    void setPath(const std::string &path);
 
 private:
     std::string _file;//文件路径

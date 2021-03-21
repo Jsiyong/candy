@@ -31,4 +31,20 @@ std::string ServerConf::getAbsoulteWebRoot() const {
     return getServerDir() + "/" + webRoot;
 }
 
+bool ServerConf::isToStop() const {
+    return _toStop;
+}
+
+void ServerConf::setToStop(bool toStop) {
+    _toStop = toStop;
+}
+
+const std::string &ServerConf::getConfigPath() const {
+    return _configPath;
+}
+
+void ServerConf::setConfigPath(const std::string &configPath) {
+    _configPath = configPath;
+}
+
 struct ServerConf serverConf;

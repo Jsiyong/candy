@@ -16,13 +16,13 @@ struct Daemon {
      * 作为守护进程启动
      * @return
      */
-    static bool start(const std::string &path = std::string());
+    static bool start(const std::string &path);
 
     /**
      * 停止该守护进程
      * @return
      */
-    static bool stop(const std::string &path = std::string());
+    static bool stop(const std::string &path);
 
 private:
 

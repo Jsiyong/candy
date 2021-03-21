@@ -44,6 +44,9 @@ bool Daemon::start(const std::string &path) {
     if (!FileUtil::writeFile(path, std::to_string(pid), 0600)) {
         return false;
     }
+
+    chdir("/");//执行目录变到根目录上
+
     //将输入输出重定向到空设备上
     int fd = open("/dev/null", 0);
     if (fd < 0) {
@@ -65,7 +68,7 @@ bool Daemon::start(const std::string &path) {
 bool Daemon::stop(const std::string &path) {
     int pid = getPidFromFile(path);
     if (pid <= 0) {
-        fprintf(stderr, "%s doesn't exist\n", pid);
+        fprintf(stderr, "%d doesn't exist\n", pid);
         return -1;
     }
 

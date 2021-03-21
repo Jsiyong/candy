@@ -26,7 +26,7 @@ ConsoleLogAppender::~ConsoleLogAppender() {
 
 void FileLogAppender::append(const LoggingEvent &event) {
     if (_file.empty()) {
-        this->setFile(serverConf.getServerDir() + "/candy.log");
+        this->setPath(serverConf.getServerDir());
     }
 
     std::string str = _layout->format(event);
@@ -44,9 +44,9 @@ void FileLogAppender::append(const LoggingEvent &event) {
     }
 }
 
-void FileLogAppender::setFile(const std::string &file) {
-    this->_file = file;
-    _fd = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+void FileLogAppender::setPath(const std::string &path) {
+    this->_file = path + "/candy.log";
+    _fd = open(this->_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (_fd < 0) {
         //文件打开错误
         fprintf(stderr, "open error: %s", strerror(errno));
