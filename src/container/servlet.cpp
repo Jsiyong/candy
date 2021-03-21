@@ -67,7 +67,7 @@ Servlet *Servlet::getNextServlet() const {
 
 bool Servlet::readFileToResponseBodyByUrl(const std::string &url, HttpResponse *response) {
     //判断路径是不是网站的公共路径中的某个路径,如果是，就之际防护数据
-    std::string resourcePath = serverConf.getWebRoot() + url;
+    std::string resourcePath = serverConf.getAbsoulteWebRoot() + url;
     if (!FileUtil::isRegularFile(resourcePath)) {
         return false;
     }

@@ -6,10 +6,26 @@
 #define CANDY_SERVCONF_H
 
 #include <string>
+#include "../protocol/json/serialization.h"
 
 #define DEFAULT_SERV_PORT 8888
-#define DEFAULT_SERV_ADDR "192.168.66.66"
+#define DEFAULT_SERV_ADDR "0.0.0.0"
 #define DEFAULT_WEB_ROOT "webapp"
+//默认的内置线程数有1条：epoll线程
+#define DEFAULT_THREAD_COUNT 1
+#define DEFAULT_CORE_THREAD_COUNT DEFAULT_THREAD_COUNT + 5
+#define DEFAULT_MAX_THREAD_COUNT 30
+#define DEFAULT_EXPIRY_TIME_OUT 30
+/**
+ * 线程池参数
+ */
+struct ThreadPoolConf {
+    int coreCount = DEFAULT_CORE_THREAD_COUNT;//线程池最小数量[核心线程数]
+    int maxCount = DEFAULT_MAX_THREAD_COUNT;//线程池最大数量
+    int expiryTimeout = DEFAULT_EXPIRY_TIME_OUT;//失效的时间
+};
+
+Serialization(ThreadPoolConf, coreCount, maxCount, expiryTimeout)
 
 /**
  * 服务器的配置信息
@@ -30,6 +46,12 @@ struct ServerConf {
     const std::string &getServerPath();
 
     /**
+     * 获取webRoot的全路径
+     * @return
+     */
+    std::string getAbsoulteWebRoot() const;
+
+    /**
      * 获取程序名称
      * @return
      */
@@ -41,27 +63,18 @@ struct ServerConf {
      */
     std::string getServerDir() const;
 
-    void setPort(int port);
+public:
+    int port = DEFAULT_SERV_PORT; //服务器端口
+    std::string host = DEFAULT_SERV_ADDR;//服务器的监听地址
+    short mode = Mode::FOREGROUND;//启动模式
+    std::string webRoot = DEFAULT_WEB_ROOT;//对外网站的根路径
 
-    void setHost(const std::string &host);
-
-    void setMode(short mode);
-
-    int getPort() const;
-
-    const std::string &getHost() const;
-
-    std::string getWebRoot() const;
-
+    ThreadPoolConf threadPoolConf;//线程池配置属性
 private:
-    int _port; //服务器端口
-    std::string _host;//服务器的监听地址
-    short _mode;//启动模式
-
     std::string _serverPath;//服务器运行路径
-    std::string _webRoot;//对外网站的根路径
-
 };
+
+Serialization(ServerConf, port, host, mode, webRoot, threadPoolConf)
 
 extern struct ServerConf serverConf;
 

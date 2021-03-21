@@ -40,6 +40,6 @@ int main(int argc, char **argv) {
     });
 
     //主线程循环accept
-    pServer->execLoopAt(serverConf.getHost(), serverConf.getPort());
+    pServer->execLoopAt(serverConf.host, serverConf.port);
     return 0;
 }

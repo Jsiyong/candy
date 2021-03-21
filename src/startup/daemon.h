@@ -18,7 +18,20 @@ struct Daemon {
      */
     static bool start(const std::string &path = std::string());
 
+    /**
+     * 停止该守护进程
+     * @return
+     */
+    static bool stop(const std::string &path = std::string());
+
 private:
+
+    /**
+     * 从文件中获取pid
+     * @param path
+     * @return
+     */
+    static pid_t getPidFromFile(const std::string &path);
 };
 
 #endif //CANDY_DAEMON_H

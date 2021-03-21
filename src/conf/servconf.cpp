@@ -21,39 +21,14 @@ std::string ServerConf::getServerDir() const {
 }
 
 ServerConf::ServerConf() {
-    _port = DEFAULT_SERV_PORT;
-    _host = DEFAULT_SERV_ADDR;
-    _mode = Mode::FOREGROUND;
-    _webRoot = DEFAULT_WEB_ROOT;
-
     //服务器运行路径
     char servPath[PATH_MAX] = {0};
     readlink(CURRENT_EXE_PATH, servPath, PATH_MAX);
     _serverPath = servPath;
 }
 
-void ServerConf::setPort(int port) {
-    _port = port;
-}
-
-void ServerConf::setHost(const std::string &host) {
-    _host = host;
-}
-
-void ServerConf::setMode(short mode) {
-    _mode = mode;
-}
-
-int ServerConf::getPort() const {
-    return _port;
-}
-
-const std::string &ServerConf::getHost() const {
-    return _host;
-}
-
-std::string ServerConf::getWebRoot() const {
-    return getServerDir() + "/" + _webRoot;
+std::string ServerConf::getAbsoulteWebRoot() const {
+    return getServerDir() + "/" + webRoot;
 }
 
 struct ServerConf serverConf;

@@ -59,6 +59,7 @@ FileLogAppender::FileLogAppender() {
 
 FileLogAppender::~FileLogAppender() {
     delete _layout;
+    close(_fd);
 }
 
 void LogAppender::setLevel(LogLevel level) {

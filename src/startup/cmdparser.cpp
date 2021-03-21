@@ -21,21 +21,22 @@ void CmdParser::parse(int argc, char **argv) {
             {"foreground", no_argument,       NULL, 'f'},
             {"help",       no_argument,       NULL, 'h'},
             {"port",       required_argument, NULL, 'p'},
+            {"stop",       required_argument, NULL, 's'},
             {NULL,         no_argument,       NULL, 0}
     };
 
     int c;
     //解析命令行参数
-    while ((c = getopt_long(argc, argv, "a:dfhp:", options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "a:dfhp:s", options, NULL)) != -1) {
         switch (c) {
             case 'a':
-                serverConf.setHost(optarg);
+                serverConf.host = optarg;
                 break;
             case 'd':
-                serverConf.setMode(ServerConf::Mode::DAEMON);
+                serverConf.mode = ServerConf::Mode::DAEMON;
                 break;
             case 'f':
-                serverConf.setMode(ServerConf::Mode::FOREGROUND);
+                serverConf.mode = ServerConf::Mode::FOREGROUND;
                 break;
             case '?':
             case 'h':
@@ -43,7 +44,7 @@ void CmdParser::parse(int argc, char **argv) {
                 exit(EXIT_SUCCESS);
                 break;
             case 'p':
-                serverConf.setPort(atoi(optarg));
+                serverConf.port = atoi(optarg);
                 break;
             default:
                 printf("?? getopt returned character code 0%o ??\n", c);
@@ -59,4 +60,5 @@ void CmdParser::printHelp() {
     printf("-f --foreground 前台运行\n");
     printf("-h --help 帮助\n");
     printf("-p --port 端口\n");
+    printf("-s --stop 停止服务器\n");
 }
