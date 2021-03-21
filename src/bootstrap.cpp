@@ -11,6 +11,7 @@
 #include <signal.h>
 
 //firewall-cmd --query-port=8888/tcp 查看端口是否开放
+//firewall-cmd --zone=public --add-port=8888/tcp --permanent 放通端口
 //valgrind --log-file="valgrind.log" --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes ./candy
 int main(int argc, char **argv) {
     //1：参数解析
@@ -37,8 +38,8 @@ int main(int argc, char **argv) {
 
     //3：日志模块初始化，采用异步日志的形式
     static Logger *pLogger = new AsyncLogger();
-    static LogAppender *pLogAppender = new ConsoleLogAppender();
-    static LogAppender *pFileLogAppender = new FileLogAppender();
+    static LogAppender *pLogAppender = new ConsoleLogAppender();//写控制台
+    static LogAppender *pFileLogAppender = new FileLogAppender();//写文件
     pLogger->addAppender(pLogAppender);
     pLogger->addAppender(pFileLogAppender);
     LogManager::getInstance()->setLogger(pLogger);
