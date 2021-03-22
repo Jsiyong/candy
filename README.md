@@ -95,13 +95,13 @@ struct HelloWorld {
 
 struct HomeController : public Controller<HomeController> {
 
-	//返回的是网页路径
+    //返回的是网页路径
     RequestMapping(home, "/")
     std::string home(HttpRequest *request, HttpResponse *response) {
         return "/index.html";
     }
 
-	//返回的是Json对象
+    //返回的是Json对象
     RequestMapping(hello, "/hello")
     ResponseBody hello(HttpRequest *request, HttpResponse *response) {
         HelloWorld helloWorld;
@@ -109,8 +109,8 @@ struct HomeController : public Controller<HomeController> {
         return helloWorld;
     }
 	
-	//
-	    RequestMapping(hello2, "/hello2")
+    //直接写到responseBody中
+    RequestMapping(hello2, "/hello2")
     void hello2(HttpRequest *request, HttpResponse *response) {
         //直接输出......
         response->getBody().append("123");
