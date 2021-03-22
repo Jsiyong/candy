@@ -1,4 +1,4 @@
-# 基于Epoll从零开始实现HTTP服务器
+# Linux C++基于Epoll从零开始实现HTTP服务器
 项目后端使用C++开发语言，以Linux为开发环境，基于epoll边缘非阻塞模型，从http协议的解析，到表单multipart/form-data协议的解析，再到JSON协议的解析，再到C++对象的序列化，一步一个脚印实现一个http服务器。实现的功能有文件的上传、下载、删除、改名等。
 
 前端采用vue框架，为了简单，没有使用node.js，使用httpVueLoader来解析vue文件，因为前端不是重点。
