@@ -92,7 +92,10 @@ struct HelloWorld {
     std::vector<int> ids = {1, 9, 2, 3, 4, 5};
     std::vector<HelloWorld> hello3;
 };
+//序列化
+Serialization(HelloWorld, code, msg, ids, hello3)
 
+//添加一个控制器
 struct HomeController : public Controller<HomeController> {
 
     //返回的是网页路径
