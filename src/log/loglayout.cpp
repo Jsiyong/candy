@@ -47,7 +47,7 @@ std::string LogLayout::format(const LoggingEvent &event) {
     //4:日志名
     fmt.append(event.getLogName());
     //5:线程号
-    fmt.append("[" + std::to_string(event.getThreadId()) + "] ");
+    fmt.append("[" + std::to_string((unsigned long long) event.getThreadId()) + "] ");
     //6:文件名:行号
     fmt.append(formatFile(event.getFile()) + ":" + std::to_string(event.getLine()) + " ");
     //7:方法名
@@ -97,7 +97,7 @@ std::string FileLogLayout::format(const LoggingEvent &event) {
     //4:日志名
     fmt.append(event.getLogName());
     //5:线程号
-    fmt.append("[" + std::to_string(event.getThreadId()) + "] ");
+    fmt.append("[" + std::to_string((unsigned long long) event.getThreadId()) + "] ");
     //6:文件名:行号
     fmt.append(formatFile(event.getFile()) + ":" + std::to_string(event.getLine()) + " ");
     //7:方法名

@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <utility>
+#include <pthread.h>
 
 /**
  * 一些防护，比如说函数返回的时候需要主动释放文件

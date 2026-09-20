@@ -3,14 +3,26 @@ cmake_minimum_required(VERSION 3.10)
 project(candy)
 message(STATUS "#### current project ${PROJECT_NAME}")
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 设置debug模式先
 set(CMAKE_BUILD_TYPE "Debug")
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+if(APPLE)
+    message(STATUS "I/O multiplexer: kqueue (macOS)")
+else()
+    message(STATUS "I/O multiplexer: epoll (Linux)")
+endif()
 
 # 设置exe输出路径直接放到项目路径下
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/)
 
 # 遍历目录下所有的.h和.cpp文件
 file(GLOB_RECURSE all_src_files src/*.cpp src/*.h)
+if(NOT APPLE)
+    list(FILTER all_src_files EXCLUDE REGEX "epoll_kqueue\\.cpp$")
+endif()
 
 # 打印一下文件信息
 foreach (src_file ${all_src_files})
@@ -18,7 +30,7 @@ foreach (src_file ${all_src_files})
 endforeach (src_file ${all_src_files})
 
 add_executable(${PROJECT_NAME} ${all_src_files})
-target_link_libraries(${PROJECT_NAME} pthread)
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
 # 添加测试程序
 message(STATUS "#### test case")

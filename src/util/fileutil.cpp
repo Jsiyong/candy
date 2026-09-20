@@ -12,11 +12,30 @@
 #include <sys/types.h>
 
 int FileUtil::addFlag2Fd(int fd, int flag) {
-    int old = fcntl(fd, F_GETFL, 0);
-    if (old < 0) {
-        return old;
+    // FD_CLOEXEC is a descriptor flag (F_GETFD/F_SETFD); the rest are status
+    // flags (F_GETFL/F_SETFL). Mixing them in F_SETFL is ignored on Linux but
+    // can change access-mode bits on macOS.
+    int ret = 0;
+    int fdFlags = flag & FD_CLOEXEC;
+    int statusFlags = flag & ~FD_CLOEXEC;
+    if (statusFlags != 0) {
+        int old = fcntl(fd, F_GETFL, 0);
+        if (old < 0) {
+            return old;
+        }
+        ret = fcntl(fd, F_SETFL, old | statusFlags);
+        if (ret < 0) {
+            return ret;
+        }
     }
-    return fcntl(fd, F_SETFL, old | flag);
+    if (fdFlags != 0) {
+        int old = fcntl(fd, F_GETFD, 0);
+        if (old < 0) {
+            return old;
+        }
+        ret = fcntl(fd, F_SETFD, old | fdFlags);
+    }
+    return ret;
 }
 
 int FileUtil::setNonBlock(int fd) {
@@ -72,24 +91,24 @@ bool FileUtil::scanDirectory(const std::string &path, std::list<std::string> &re
         //文件夹无效
         return false;
     }
-    struct dirent *pEntry = (struct dirent *) malloc(sizeof(struct dirent));
+    // readdir_r is deprecated/removed on macOS; readdir on a private DIR* is fine.
+    errno = 0;
     struct dirent *pResult = NULL;
-    while (true) {
-        if ((readdir_r(pDir, pEntry, &pResult)) != 0) {
-            error("readdir_r[%s] error: %s", path, strerror(errno));
-            return false;
-        }
-        if (pResult == NULL)
-            break;
+    while ((pResult = readdir(pDir)) != NULL) {
         if (pResult->d_name[0] == '.')
             continue;
         if (DT_DIR == pResult->d_type || DT_REG == pResult->d_type) {
             //正规的文件夹和文件才加入里面
             results.emplace_back(pResult->d_name);
         }
+        errno = 0;
+    }
+    if (errno != 0) {
+        error("readdir[%s] error: %s", path, strerror(errno));
+        closedir(pDir);
+        return false;
     }
     closedir(pDir);
-    free(pEntry);
 
     return true;
 }

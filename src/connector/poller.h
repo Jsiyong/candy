@@ -6,12 +6,13 @@
 #define CANDY_POLLER_H
 
 #include <unordered_map>
-#include <sys/epoll.h>
+#include <pthread.h>
+#include "../compat/epoll.h"
 #include "channel.h"
 #include "processor.h"
 
 /**
- * 选择器，使用epoll实现
+ * 选择器：Linux 使用 epoll，macOS 使用 kqueue（见 compat/epoll.h）
  */
 struct Poller : public Runnable {
     Poller();
@@ -51,13 +52,17 @@ private:
 
     int _epfd = 0;
 
-    int _eventfd;//负责告诉epoll_wait需要退出了
+    int _wakeupRecvFd = -1;//加入选择器、用于唤醒 wait
+    int _wakeupSendFd = -1;//写入以唤醒 wait（Linux 上与 recv 为同一个 eventfd）
 
     std::unordered_map<int, SocketProcessor *> _socketProcessors;//key: 客户端fd, value: socket处理对象
     ThreadPoolExecutor *_executor = NULL;
     bool _exit = false;//线程是否退出
+    bool _loopExited = false;//run() 循环是否已经结束
 
     pthread_mutex_t _mutex;//互斥量
+    pthread_mutex_t _exitMutex;
+    pthread_cond_t _exitCond;
 
 };
 

@@ -8,8 +8,8 @@
 #include <list>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include "../util/runnable.h"
 
 #include "../util/singleton.h"
@@ -103,7 +103,7 @@ private:
     pthread_cond_t _cond;//条件变量
     pthread_mutex_t _mutex;//互斥量
 
-    sem_t _sem;//信号量初始化
+    int _exitAck[2] = {-1, -1};//管道：线程退出时通知析构函数（macOS 不支持 sem_init 匿名信号量）
 
     bool _exit = false;//是否退出线程
 };

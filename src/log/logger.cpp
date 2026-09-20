@@ -6,7 +6,11 @@
 #include "../conf/servconf.h"
 #include "../util/threadpool.h"
 #include "../util/guard.h"
+#include "../util/fileutil.h"
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
 void Logger::addAppender(LogAppender *appender) {
     _appenderList.push_back(appender);
@@ -47,8 +51,12 @@ AsyncLogger::AsyncLogger() {
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
     pthread_cond_init(&_cond, NULL);
-    //信号量初始化
-    sem_init(&_sem, 0, 0);
+    if (pipe(_exitAck) != 0) {
+        fprintf(stderr, "pipe error: %s\n", strerror(errno));
+        abort();
+    }
+    FileUtil::addFlag2Fd(_exitAck[0], FD_CLOEXEC);
+    FileUtil::addFlag2Fd(_exitAck[1], FD_CLOEXEC);
 
     //加入线程池管理
     ThreadPoolExecutor::getInstance()->submit(this);
@@ -76,10 +84,15 @@ void AsyncLogger::run() {
             locker.relock();//写完重新获取锁
         } while (true);
 
+        if (this->_exit) {
+            break;
+        }
         pthread_cond_wait(&this->_cond, &this->_mutex);//令进程等待在条件变量上
     }
-    //退出之前，发布一个信号量给析构函数
-    sem_post(&_sem);
+    //退出之前，通知析构函数
+    unsigned char ack = 1;
+    ssize_t ignored = ::write(_exitAck[1], &ack, 1);
+    (void) ignored;
 }
 
 void AsyncLogger::write(const LoggingEvent &event) {
@@ -95,10 +108,15 @@ AsyncLogger::~AsyncLogger() {
     _exit = true;
     pthread_cond_broadcast(&_cond);
 
-    sem_wait(&_sem);//等待线程释放
+    unsigned char ack = 0;
+    if (_exitAck[0] >= 0) {
+        ssize_t ignored = ::read(_exitAck[0], &ack, 1);//等待线程释放
+        (void) ignored;
+        close(_exitAck[0]);
+        close(_exitAck[1]);
+        _exitAck[0] = _exitAck[1] = -1;
+    }
     usleep(10);
-    //销毁信号量
-    sem_destroy(&_sem);
     //销毁互斥锁
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);

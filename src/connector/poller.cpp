@@ -5,27 +5,46 @@
 #include "poller.h"
 #include "../util/fileutil.h"
 #include <unistd.h>
+#include <string.h>
+#include <stdint.h>
+#if !defined(__APPLE__)
 #include <sys/eventfd.h>
+#endif
 
 #define MAX_EVENT 1024
 #define IP_SIZE 20
+#if !defined(__APPLE__)
 constexpr static uint64_t MaxEventfdNum = UINT64_MAX - 1;//最大的eventfd数
+#endif
 
 Poller::Poller() {
 
     _executor = ThreadPoolExecutor::getInstance();
 
     _epfd = epoll_create(1);
-    _eventfd = eventfd(0, EFD_SEMAPHORE);//信号量形式
-    exit_if(_eventfd < 0, "eventfd error: %s", strerror(errno));
-    //将_eventfd加入epoll反应堆中
-    this->addEvent(_eventfd, false);//采用阻塞的形式
-
     exit_if(_epfd < 0, "epoll_create error:%s", strerror(errno));
+
+#if defined(__APPLE__)
+    int fds[2];
+    exit_if(pipe(fds) < 0, "pipe error: %s", strerror(errno));
+    _wakeupRecvFd = fds[0];
+    _wakeupSendFd = fds[1];
+    FileUtil::addFlag2Fd(_wakeupRecvFd, FD_CLOEXEC);
+    FileUtil::addFlag2Fd(_wakeupSendFd, FD_CLOEXEC);
+#else
+    _wakeupRecvFd = eventfd(0, EFD_SEMAPHORE);//信号量形式
+    exit_if(_wakeupRecvFd < 0, "eventfd error: %s", strerror(errno));
+    _wakeupSendFd = _wakeupRecvFd;
+#endif
+    //将唤醒 fd 加入反应堆中
+    this->addEvent(_wakeupRecvFd, false);//采用阻塞的形式
+
     info("epoll create success!!");
 
     //初始化互斥锁
     pthread_mutex_init(&_mutex, NULL);
+    pthread_mutex_init(&_exitMutex, NULL);
+    pthread_cond_init(&_exitCond, NULL);
 
     //创建反应堆线程，也就是把当前这个对象加入线程池中，记得最后才加上
     _executor->submit(this);
@@ -80,8 +99,8 @@ void Poller::run() {
         exit_if(eventCount == -1 && errno != EINTR, "epoll_wait error:%s", strerror(errno));
         //处理每一个事件
         for (int i = 0; i < eventCount; ++i) {
-            if (events[i].data.fd == _eventfd) {
-                //如果是eventfd.则说明可能是结束进程了，那就直接退出
+            if (events[i].data.fd == _wakeupRecvFd) {
+                //如果是唤醒 fd，则说明可能是结束进程了，那就直接退出
                 trace("get eventfd event!!");
                 break;
             }
@@ -123,21 +142,44 @@ void Poller::run() {
         }
     }
     uint64_t num = 0;//每次智能读出1
-    int ret = ::read(_eventfd, &num, sizeof(uint64_t));//回应写端
-    trace("eventfd read[%d byte/%lld] ok!!", ret, num);
+    int ret = ::read(_wakeupRecvFd, &num, sizeof(uint64_t));//回应写端
+    trace("eventfd read[%d byte/%lld] ok!!", ret, (long long) num);
+
+    pthread_mutex_lock(&_exitMutex);
+    _loopExited = true;
+    pthread_cond_signal(&_exitCond);
+    pthread_mutex_unlock(&_exitMutex);
 }
 
 Poller::~Poller() {
     _exit = true;
-    int ret = ::write(_eventfd, &MaxEventfdNum, sizeof(uint64_t));
+#if defined(__APPLE__)
+    uint64_t one = 1;
+    int ret = ::write(_wakeupSendFd, &one, sizeof(one));
+#else
+    int ret = ::write(_wakeupSendFd, &MaxEventfdNum, sizeof(uint64_t));
+#endif
     exit_if(ret < 0, "error: %s", strerror(errno));
     trace("poll exiting...");
-    //如果读端没有读数据，继续写入这个数据会超过最大整型，会导致阻塞
-    uint64_t waitForExit = 1;
-    ret = ::write(_eventfd, &waitForExit, sizeof(uint64_t));//等到确实收到退出信号，才退出
+    // 等待 run() 循环真正退出（Linux 原先用 eventfd 写满阻塞，macOS pipe 无法等价模拟）
+    pthread_mutex_lock(&_exitMutex);
+    while (!_loopExited) {
+        pthread_cond_wait(&_exitCond, &_exitMutex);
+    }
+    pthread_mutex_unlock(&_exitMutex);
     trace("poll exit ok...");
-    usleep(10);//小小的等一下，确保epoll_wait线程完全退出
     pthread_mutex_destroy(&_mutex);
+    pthread_mutex_destroy(&_exitMutex);
+    pthread_cond_destroy(&_exitCond);
+    if (_wakeupRecvFd >= 0) {
+        close(_wakeupRecvFd);
+    }
+    if (_wakeupSendFd >= 0 && _wakeupSendFd != _wakeupRecvFd) {
+        close(_wakeupSendFd);
+    }
+    if (_epfd >= 0) {
+        close(_epfd);
+    }
 }
 
 void Poller::addEvent(int fd, bool nonblock) {

@@ -5,6 +5,7 @@
 #include "guard.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <stdio.h>
 
 void ThreadPoolExecutor::submit(Runnable *task) {
 
@@ -146,7 +147,7 @@ void *ThreadPoolExecutor::ExecutorThread::run(void *param) {
     //删除这个对象
     delete _this;
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 ThreadPoolExecutor::ExecutorThread::ExecutorThread(ThreadPoolExecutor *manager) : _manager(manager) {
