@@ -1,5 +1,5 @@
-# Linux C++基于Epoll从零开始实现HTTP服务器
-项目后端使用C++开发语言，以Linux为开发环境，基于epoll边缘非阻塞模型，从http协议的解析，到表单multipart/form-data协议的解析，再到JSON协议的解析，再到C++对象的序列化，一步一个脚印实现一个http服务器。实现的功能有文件的上传、下载、删除、改名等。
+# Linux / macOS C++ HTTP 服务器（epoll / kqueue）
+项目后端使用C++开发语言，以 Linux 为原始开发环境，基于边缘非阻塞 I/O（Linux 上为 epoll，macOS 上为 kqueue）实现 HTTP 服务器。从 http 协议的解析，到表单 multipart/form-data 协议的解析，再到 JSON 协议的解析，再到 C++ 对象的序列化，一步一个脚印实现一个 http 服务器。实现的功能有文件的上传、下载、删除、改名等。
 
 前端采用vue框架，为了简单，没有使用node.js，使用httpVueLoader来解析vue文件，因为前端不是重点。
 
@@ -17,9 +17,14 @@
 ![项目图片显示](https://img-blog.csdnimg.cn/2021032223384335.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5NTE5MDE0,size_16,color_FFFFFF,t_70#pic_center)
 
 ## 开发环境
-- centos 7
-- gcc version 7.3.1
-- cmake 3.17
+- Linux x86_64（原始环境：centos 7 / gcc 7.3.1）或 macOS（Apple Silicon / Intel）
+- C++11 编译器：gcc 7+ 或 Apple clang
+- cmake 3.10+
+- pthread（随系统提供，CMake 通过 `Threads::Threads` 链接）
+
+编译依赖：
+- Linux：`build-essential`、`cmake`（Debian/Ubuntu：`sudo apt-get install -y build-essential cmake`）
+- macOS：Xcode Command Line Tools，以及 cmake（`brew install cmake` 或从 [cmake.org](https://cmake.org/download/) 安装）
 
 ## 线程模型
 
@@ -52,9 +57,29 @@
 - httpVueLoader的使用，本项目前端只是辅助展示，所以并没有安装node.js，直接用httpVueLoader来解析vue文件
 
 ## 项目启动
+
+在仓库根目录编译（Linux 与 macOS 相同）：
+
+```bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build . -j
+cd ..
+```
+
+若 Linux 上默认的 `c++` 是 clang 且链接阶段找不到 `-lstdc++`，请显式使用 g++：
+
+```bash
+CC=gcc CXX=g++ cmake ..
+cmake --build . -j
+```
+
+可执行文件会输出到仓库根目录的 `candy`（由 CMake `EXECUTABLE_OUTPUT_PATH` 指定）。
+
 启动参数如下
 ```bash
-[root@localhost tmp.mkWXUL9TBY]# ./candy -h
+./candy -h
 -a --addr 监听地址
 -d --daemon 后台运行
 -f --file 配置文件
@@ -65,19 +90,27 @@
 启动
 
 ```bash
-[root@localhost tmp.mkWXUL9TBY]# ./candy -p8888
-2021-03-22 23:47:36.950 INFO  candy[139832041047872] poller.cpp:25 Poller >> epoll create success!!
-2021-03-22 23:47:36.951 TRACE candy[139832041047872] acceptor.cpp:56 acceptAt >> 
+./candy -p8888
+```
 
-████████      ████      ████       ██ ███████    ██          ██ 
-██           ██  ██     ██ ██      ██ ██      ██   ██      ██   
-██          ████████    ██   ██    ██ ██       ██    ██████     
-██         ██      ██   ██     ██  ██ ██       ██      ██       
-██        ██        ██  ██      ██ ██ ██      ██       ██       
-████████ ██          ██ ██       ████ ████████         ██       run at http://0.0.0.0:8888
+成功后日志中会看到 I/O 选择器创建成功，并打印：
 
 ```
-然后浏览器便可以访问了
+... run at http://0.0.0.0:8888
+```
+
+然后浏览器访问 `http://127.0.0.1:8888/` 即可。
+
+前台运行时用 Ctrl+C 结束；若以 `-d` 守护进程启动，可用 `./candy -s` 停止。
+
+编译测试程序（同样在 `build/` 下生成到仓库根目录）：
+
+```bash
+./testjson
+./testhttpmultipart
+./testcontroller
+./testlog
+```
 
 ## 添加业务
 > 写一个HomeController.cpp文件，添加相对应的路径和方法映射，便能生成接口。支持Json对象，网页，以及直接返回。具体写法参照路径/src/app/controller下的controller的写法

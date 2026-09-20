@@ -3,10 +3,16 @@
 //
 #include "servconf.h"
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <vector>
+#endif
 
-//代表程序的路径，可以通过访问这个路径来获取
-#define CURRENT_EXE_PATH "/proc/self/exe"
+#ifndef PATH_MAX
 #define PATH_MAX 1024
+#endif
 
 const std::string &ServerConf::getServerPath() {
     return _serverPath;
@@ -23,7 +29,23 @@ std::string ServerConf::getServerDir() const {
 ServerConf::ServerConf() {
     //服务器运行路径
     char servPath[PATH_MAX] = {0};
-    readlink(CURRENT_EXE_PATH, servPath, PATH_MAX);
+#if defined(__APPLE__)
+    uint32_t size = 0;
+    _NSGetExecutablePath(NULL, &size);
+    std::vector<char> buf(size > 0 ? size : 1);
+    if (_NSGetExecutablePath(buf.data(), &size) == 0) {
+        if (realpath(buf.data(), servPath) == NULL) {
+            // realpath 失败时退回未解析路径（可能是相对路径）
+            snprintf(servPath, sizeof(servPath), "%s", buf.data());
+        }
+    }
+#else
+    // Linux: /proc/self/exe
+    ssize_t n = readlink("/proc/self/exe", servPath, sizeof(servPath) - 1);
+    if (n >= 0) {
+        servPath[n] = '\0';
+    }
+#endif
     _serverPath = servPath;
 }
 

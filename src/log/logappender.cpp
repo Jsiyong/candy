@@ -5,6 +5,7 @@
 #include "./logappender.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <iostream>
 #include "string.h"

@@ -8,6 +8,6 @@ foreach (test_src ${test_src_list})
     message(STATUS "#### add a test case -- ${test_exe_name}")
     # 添加为exe程序
     add_executable(${test_exe_name} ${test_src} ${test_src_file})
-    target_link_libraries(${test_exe_name} pthread)
+    target_link_libraries(${test_exe_name} Threads::Threads)
 
 endforeach (test_src ${test_src_list})

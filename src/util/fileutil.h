@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <string>
 #include <list>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /**
  * 文件相关工具类

@@ -1,2 +1,11 @@
 cmake-build-debug/*
 .idea/*
+build/
+/candy
+/testjson
+/testcontroller
+/testhttpmultipart
+/testlog
+/testthreadpool
+/candy.log
+/proc.pid
